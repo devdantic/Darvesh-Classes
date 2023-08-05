@@ -1,7 +1,5 @@
 # darvesh_classes
 
-A new Flutter project.
-
 ## Getting Started
 
 This project was created in order to fullfill the general requirements of a coaching class
