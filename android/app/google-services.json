@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "507741712862",
+    "project_id": "darvesh-classes-ac86c",
+    "storage_bucket": "darvesh-classes-ac86c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:507741712862:android:71683e1887702f5d96ed4f",
+        "android_client_info": {
+          "package_name": "com.example.darvesh_classes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "507741712862-434t170402ji4aos1lhs1at7scco17ac.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClpknc5ptj_4M9DabbaFsupRmbO6e3l2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "507741712862-434t170402ji4aos1lhs1at7scco17ac.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
