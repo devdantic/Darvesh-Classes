@@ -1,3 +1,4 @@
+import 'package:darvesh_classes/check_attendance.dart';
 import 'package:darvesh_classes/event.dart';
 import 'package:darvesh_classes/send_messages.dart';
 import 'package:darvesh_classes/send_notifications.dart';
@@ -67,6 +68,13 @@ class AdminPage extends StatelessWidget {
                     Icons.message,
                     Colors.red,
                     fullWidth: true,
+                  ),
+                  buildButton(
+                    context,
+                    const CheckAttendancePage(),
+                    'Check Attendance',
+                    Icons.verified_user_rounded,
+                    Colors.brown,
                   ),
                 ],
               ),

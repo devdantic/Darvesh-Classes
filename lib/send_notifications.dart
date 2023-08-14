@@ -49,7 +49,6 @@ class _SendNotificationPageState extends State<SendNotificationPage> {
   }
 
   Future<String?> getFCMToken(String name) async {
-    // Retrieve the FCM token associated with the given name from the database
     final snapshot = await FirebaseFirestore.instance
         .collection('Darvesh Classes')
         .where('name', isEqualTo: name)

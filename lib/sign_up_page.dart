@@ -55,7 +55,6 @@ class _SignUpPageState extends State<SignUpPage> {
       String password = _passwordController.text;
       String name = _nameController.text;
       String? std = _selectedStandard;
-      String age = _ageController.text;
       String address = _addressController.text;
       String phoneNumber = _phoneNumberController.text;
 
@@ -66,8 +65,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
       if (user != null) {
         String? fcmToken = await FirebaseMessaging.instance.getToken();
-        String imageUrl =
-            await uploadImageToFirebaseStorage(_selectedImage!.path);
+        String imageUrl = _selectedImage != null
+            ? await uploadImageToFirebaseStorage(_selectedImage!.path)
+            : '';
 
         await FirebaseFirestore.instance
             .collection('Darvesh Classes')
@@ -76,7 +76,6 @@ class _SignUpPageState extends State<SignUpPage> {
           'name': name,
           'emailID': email,
           'std': std,
-          'age': age,
           'address': address,
           'phoneNumber': phoneNumber,
           'imageUrl': imageUrl,
@@ -188,8 +187,8 @@ class _SignUpPageState extends State<SignUpPage> {
             if (_selectedImage == null)
               const Center(
                 child: Text(
-                  'Please select an image',
-                  style: TextStyle(color: Colors.red),
+                  'Click on the above icon to select the image',
+                  style: TextStyle(color: Colors.black),
                 ),
               ),
             const SizedBox(height: 10),
@@ -344,8 +343,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         minimumSize: const Size(double.infinity, 50),
                         // Set minimum size
-                        textStyle:
-                            const TextStyle(fontSize: 18), // Increase font size
+                        textStyle: const TextStyle(fontSize: 18),
                       ),
                       child: const Text('Go Back'),
                     ),
