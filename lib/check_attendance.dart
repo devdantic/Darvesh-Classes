@@ -17,7 +17,6 @@ class CheckAttendancePage extends StatelessWidget {
 
 class StudentAttendanceList extends StatelessWidget {
   const StudentAttendanceList({super.key});
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -76,27 +75,51 @@ class StudentAttendanceList extends StatelessWidget {
   }
 }
 
-class StudentAttendanceDatesList extends StatelessWidget {
+class StudentAttendanceDatesList extends StatefulWidget {
   final Map<String, dynamic> attendanceData;
 
   const StudentAttendanceDatesList(this.attendanceData, {super.key});
 
   @override
+  _StudentAttendanceDatesListState createState() =>
+      _StudentAttendanceDatesListState();
+}
+
+class _StudentAttendanceDatesListState
+    extends State<StudentAttendanceDatesList> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    final attendanceDates = attendanceData.keys.toList();
+    final attendanceDates = widget.attendanceData.keys.toList();
+    const int maxVisibleDates = 5;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Attendance Dates:', style: TextStyle(fontSize: 14)),
-        for (var date in attendanceDates)
+        for (var i = 0;
+            i < (_expanded ? attendanceDates.length : maxVisibleDates);
+            i++)
           Row(
             children: [
-              Text(date),
+              Text(attendanceDates[i]),
               const SizedBox(width: 10),
-              attendanceData[date] == true
+              widget.attendanceData[attendanceDates[i]] == true
                   ? const Icon(Icons.check_circle, color: Colors.green)
                   : const Icon(Icons.cancel, color: Colors.red),
             ],
+          ),
+        if (attendanceDates.length > maxVisibleDates)
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _expanded = !_expanded;
+              });
+            },
+            child: Text(
+              _expanded ? 'Show Less' : 'Show All',
+              style: const TextStyle(color: Colors.blue),
+            ),
           ),
       ],
     );
