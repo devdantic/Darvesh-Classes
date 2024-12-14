@@ -157,22 +157,47 @@ class _MarkAttendancePageState extends State<MarkAttendancePage> {
           ),
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              (context, index) {
+                  (context, index) {
                 final student = _students[index];
                 final studentID = student['studentID'].toString();
-
                 final attendanceData = _attendanceStatus[studentID];
 
-                return ListTile(
-                  title: Text(student['name'].toString()),
-                  trailing: Checkbox(
-                    value: attendanceData?[
-                            _selectedDate.toLocal().toString().split(' ')[0]] ??
-                        false,
-                    onChanged: (bool? value) {
-                      _markAttendance(studentID, value ?? false);
-                    },
-                  ),
+                return Column(
+                  children: [
+                    ListTile(
+                      title: Text(student['name'].toString()),
+                      subtitle: Text('Mark Attendance:'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: attendanceData?[_selectedDate
+                                    .toLocal()
+                                    .toString()
+                                    .split(' ')[0]] ??
+                                false,
+                            onChanged: (bool? value) {
+                              _markAttendance(studentID, value ?? false);
+                            },
+                          ),
+                          Text('Present'),
+                          SizedBox(width: 10), // Add spacing between checkboxes
+                          Checkbox(
+                            value: attendanceData?[_selectedDate
+                                    .toLocal()
+                                    .toString()
+                                    .split(' ')[0]] ==
+                                false,
+                            onChanged: (bool? value) {
+                              _markAttendance(studentID, !value!);
+                            },
+                          ),
+                          Text('Absent'),
+                        ],
+                      ),
+                    ),
+                    Divider(),
+                  ],
                 );
               },
               childCount: _students.length,

@@ -2,7 +2,7 @@
 
     <application
         android:name="${applicationName}"
-        android:icon="@mipmap/dc_logo"
+        android:icon="@mipmap/launcher_icon"
         android:label="Darvesh Classes">
         <!--  <service
               android:name=".java.MyFirebaseMessagingService"

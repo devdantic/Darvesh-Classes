@@ -1,11 +1,17 @@
 import 'package:darvesh_classes/check_attendance.dart';
 import 'package:darvesh_classes/event.dart';
-import 'package:darvesh_classes/send_messages.dart';
-import 'package:darvesh_classes/send_notifications.dart';
+import 'package:darvesh_classes/group_message_admin.dart';
+import 'package:darvesh_classes/send_complains_admin.dart';
+import 'package:darvesh_classes/student_analysis.dart';
 import 'package:darvesh_classes/updateStudyMaterial.dart';
+import 'package:darvesh_classes/verify_student_requests.dart';
 import 'package:flutter/material.dart';
-
-import 'mark_attendance.dart';
+import 'package:darvesh_classes/mark_attendance.dart';
+import 'package:darvesh_classes/authentication_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'empty_database_page.dart';
+import 'view_messages_page.dart';
 
 class AdminPage extends StatelessWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -15,6 +21,14 @@ class AdminPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin Page'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              _signOut(context);
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -49,7 +63,7 @@ class AdminPage extends StatelessWidget {
                   ),
                   buildButton(
                     context,
-                    const SendNotificationPage(),
+                    const StudentComplainsPage(),
                     'Send Complains',
                     Icons.notifications,
                     Colors.green,
@@ -75,6 +89,38 @@ class AdminPage extends StatelessWidget {
                     'Check Attendance',
                     Icons.verified_user_rounded,
                     Colors.brown,
+                  ),
+                  buildButton(
+                    context,
+                    const Analysis(),
+                    "Student's Analysis",
+                    Icons.analytics,
+                    Colors.indigoAccent,
+                  ),
+                  buildButton(
+                    context,
+                    const EmptyDatabasePage(),
+                    // New button for emptying the database
+                    'Empty Database',
+                    Icons.delete,
+                    Colors.grey,
+                    fullWidth: true,
+                  ),
+                  buildButton(
+                    context,
+                    const VerifyStudentRequestsPage(),
+                    'Verify Student Requests',
+                    Icons.verified_user_outlined,
+                    Colors.teal,
+                    fullWidth: true,
+                  ),
+                  buildButton(
+                    context,
+                    const ViewMessagesPage(), // New button for viewing messages
+                    'View Messages',
+                    Icons.message_outlined,
+                    Colors.blueGrey,
+                    fullWidth: true,
                   ),
                 ],
               ),
@@ -126,5 +172,22 @@ class AdminPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _signOut(BuildContext context) async {
+    try {
+      final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+      await _firebaseAuth.signOut();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AuthenticationPage(),
+        ),
+      );
+    } catch (e) {
+      // Handle sign out error
+    }
   }
 }

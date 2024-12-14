@@ -3,17 +3,20 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 
 import 'authentication_page.dart';
+import 'firebase_message.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await FirebaseApi().initNotification();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   await SharedPreferences.getInstance();
-
+  await FirebaseMessaging.instance.setAutoInitEnabled(true);
   await Permission.notification.request();
-
+  //sendNotification("Test", "TEST", 'dvMlPxG6TWy0b6e-j39cB0:APA91bF49otntJ0nbi_iDmuMA18HwuqyO2jiE6ckLKWzV0Bav_DjvLrgxeTciVLV2jYkGu23h2UyzCeUjVZxGIQxdacTan5EQUHIAkpNxhyOkU3Ma5Est7QS76hccQa9jifMc-oROBzB');
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
     announcement: false,
@@ -48,7 +51,7 @@ class IntroPage extends StatelessWidget {
     return MaterialApp(
       title: 'Intro',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        primarySwatch: Colors.indigo,
       ),
       home: const DarveshClasses(),
     );
@@ -62,80 +65,45 @@ class DarveshClasses extends StatefulWidget {
   _DarveshClassesState createState() => _DarveshClassesState();
 }
 
-class _DarveshClassesState extends State<DarveshClasses>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  final double _imageSize = 200.0;
-  String _welcomeText = '';
+class _DarveshClassesState extends State<DarveshClasses> {
+  late VideoPlayerController _controller;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    );
-
-    _animationController.addListener(() {
-      setState(() {
-        if (_animationController.status == AnimationStatus.completed) {
-          _welcomeText = 'Welcome to';
-        }
+    _controller = VideoPlayerController.asset('media/DC_Intro.mp4')
+      ..initialize().then((_) {
+        _controller.play();
+        _controller.setLooping(false);
+        _controller.addListener(() {
+          if (!_controller.value.isPlaying && !_controller.value.isLooping) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const AuthenticationPage(),
+              ),
+            );
+          }
+        });
       });
-    });
-
-    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _welcomeText,
-              style: const TextStyle(
-                color: Colors.teal,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 5),
-            AnimatedBuilder(
-              animation: _animationController,
-              builder: (BuildContext context, Widget? child) {
-                return Transform.scale(
-                  scale: 1.0 + _animationController.value * 0.2,
-                  child: Image.asset(
-                    'media/DC_logo_2.png',
-                    width: _imageSize,
-                    height: _imageSize,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AuthenticationPage(),
-                  ),
-                );
-              },
-              child: const Text('Get Started'),
-            ),
-          ],
+        child: AspectRatio(
+          aspectRatio: aspectRatio,
+          child: VideoPlayer(_controller),
         ),
       ),
     );

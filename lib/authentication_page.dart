@@ -1,8 +1,9 @@
-import 'package:darvesh_classes/sign_up_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'sign_up_page.dart';
 import 'admin_page.dart';
 import 'home_page.dart';
 
@@ -17,9 +18,15 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
   bool _isLoading = false;
   bool _obscureText = true;
+  bool _isVerificationPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkVerificationStatus();
+  }
 
   @override
   void dispose() {
@@ -28,12 +35,26 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     super.dispose();
   }
 
+  Future<void> _checkVerificationStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isVerificationPending = prefs.getBool('isVerificationPending');
+    if (isVerificationPending != null && isVerificationPending) {
+      setState(() {
+        _isVerificationPending = true;
+      });
+    } else {
+      setState(() {
+        _isVerificationPending = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     User? currentUser = _firebaseAuth.currentUser;
     if (currentUser?.email == 'sanjaygovindani757@gmail.com') {
       return const AdminPage();
-    } else if (currentUser != null) {
+    } else if (currentUser != null && !_isVerificationPending) {
       return const HomePage();
     } else {
       return Scaffold(
@@ -111,28 +132,6 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                       : const Text('Sign Up'),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signInWithGoogle,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset(
-                        'media/google-logo.svg',
-                        height: 20,
-                        width: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      const Text('Sign In with Google'),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -149,13 +148,59 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       String email = _emailController.text;
       String password = _passwordController.text;
 
+      // Check if the email is in the student_requests collection
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('student_requests')
+              .where('emailID', isEqualTo: email)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isVerificationPending', true);
+
+        setState(() {
+          _isVerificationPending = true;
+          _isLoading = false;
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Verification Pending'),
+              content: const Text(
+                  'Your account verification is still pending. Please wait for admin approval.'),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+        return; // Exit the function early if verification is pending
+      }
+
       UserCredential userCredential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
 
       User? user = userCredential.user;
       if (user != null) {
         bool isAdmin = await checkUserStatus(user.email ?? '');
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isVerificationPending', false);
+
+        setState(() {
+          _isVerificationPending = false;
+        });
+
         if (isAdmin) {
+          // Update FCM token
+          await updateFCMToken(user.uid);
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const AdminPage()),
@@ -166,14 +211,54 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
             MaterialPageRoute(builder: (context) => const HomePage()),
           );
         }
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Success'),
+              content: const Text('Sign-in successful'),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'An error occurred';
+
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'No user found for that email.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Wrong password provided for that user.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        default:
+          errorMessage = 'An error occurred';
+          break;
       }
 
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      // Handle sign-in errors
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Sign-in successful'),
+            title: const Text('Error'),
+            content: const Text('Sign-in failed'),
             actions: [
               ElevatedButton(
                 onPressed: () {
@@ -183,24 +268,6 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
               ),
             ],
           );
-        },
-      );
-    } catch (e) {
-      // Handle sign-in errors
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-              title: const Text('Error'),
-              content: const Text('Sign-in failed'),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK'),
-                ),
-              ]);
         },
       );
     } finally {
@@ -264,67 +331,20 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     return false;
   }
 
-  Future<void> _signInWithGoogle() async {
+  Future<void> updateFCMToken(String userId) async {
     try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser!.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      UserCredential userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
-
-      User? user = userCredential.user;
-      if (user != null) {
-        bool isAdmin = await checkUserStatus(user.email ?? '');
-        if (isAdmin) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminPage()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
-        }
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null) {
+        await FirebaseFirestore.instance
+            .collection('Darvesh Classes')
+            .doc(userId)
+            .update({
+          'fcmToken': fcmToken,
+        });
+        print("FCM TOKEN UPDATED FOR ADMIN");
       }
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Sign-in with Google successful'),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sign-in with Google failed'),
-        ),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      print('Failed to update FCM token: $e');
     }
   }
 }

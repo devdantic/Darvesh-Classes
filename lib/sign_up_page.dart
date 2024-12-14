@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,9 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-
-import 'admin_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -20,7 +20,6 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   String? _selectedStandard;
@@ -35,7 +34,6 @@ class _SignUpPageState extends State<SignUpPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
-    _ageController.dispose();
     _addressController.dispose();
     _phoneNumberController.dispose();
     super.dispose();
@@ -69,6 +67,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ? await uploadImageToFirebaseStorage(_selectedImage!.path)
             : '';
 
+        // Save user details to Firestore
         await FirebaseFirestore.instance
             .collection('Darvesh Classes')
             .doc(user.uid)
@@ -81,31 +80,74 @@ class _SignUpPageState extends State<SignUpPage> {
           'imageUrl': imageUrl,
           'fcmToken': fcmToken,
         });
-        if (email == 'sanjaygovindani757@gmail.com') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminPage()),
-          );
-        }
+
+        await FirebaseFirestore.instance
+            .collection('student_requests')
+            .doc(user.uid)
+            .set({
+          'name': name,
+          'emailID': email,
+          'std': std,
+          'address': address,
+          'phoneNumber': phoneNumber,
+          'imageUrl': imageUrl,
+          'fcmToken': fcmToken,
+          'request_timestamp': FieldValue.serverTimestamp(),
+        });
+
+        const String adminFCMToken =
+            "dvMlPxG6TWy0b6e-j39cB0:APA91bF49otntJ0nbi_iDmuMA18HwuqyO2jiE6ckLKWzV0Bav_DjvLrgxeTciVLV2jYkGu23h2UyzCeUjVZxGIQxdacTan5EQUHIAkpNxhyOkU3Ma5Est7QS76hccQa9jifMc-oROBzB";
+
+        await _sendNotification(
+          'New Account Verification Pending',
+          'A new account verification request is pending. Please review.',
+          adminFCMToken,
+        );
+
+        // Show success dialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Success'),
+              content: const Text(
+                  "Sign-up successful.\nNow you can Sign In with Email & Password"),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'An error occurred';
+
+      switch (e.code) {
+        case 'weak-password':
+          errorMessage = 'The password provided is too weak.';
+          break;
+        case 'email-already-in-use':
+          errorMessage = 'The account already exists for that email.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        default:
+          errorMessage = 'An error occurred';
+          break;
       }
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Success'),
-            content: const Text(
-                "Sign-up successful.\nNow you can Sign In with Email & Password"),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
       );
 
       setState(() {
@@ -121,6 +163,48 @@ class _SignUpPageState extends State<SignUpPage> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _sendNotification(
+      String title, String body, String token) async {
+    const String serverKey =
+        'AAAAdjfDsd4:APA91bGBzOGZa1VEAssIAlxhJfVuXBZVWQD6yDjgE4RUT73Cx4RU7KS9APYl5y_wRWdX98Kfo38cjlywY5iPV_pt9EXxtHsrkOGJBUztasm0cSM1U4Tjcu86am3q58PWiJDkxaCFACl8';
+    const String url = 'https://fcm.googleapis.com/fcm/send';
+
+    final Map<String, dynamic> payload = {
+      'notification': {
+        'title': title,
+        'body': body,
+        'sound': 'default',
+      },
+      'priority': 'high',
+      'data': {
+        'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+      },
+      'to': token,
+    };
+
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'key=$serverKey',
+    };
+
+    try {
+      final http.Response response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        print('Notification sent successfully');
+      } else {
+        print('Failed to send notification: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error sending notification: $e');
     }
   }
 
@@ -342,7 +426,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         minimumSize: const Size(double.infinity, 50),
-                        // Set minimum size
                         textStyle: const TextStyle(fontSize: 18),
                       ),
                       child: const Text('Go Back'),
@@ -357,3 +440,4 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
+

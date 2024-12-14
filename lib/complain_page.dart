@@ -23,8 +23,9 @@ class _ComplainPageState extends State<ComplainPage> {
   Future<void> _fetchComplaints() async {
     try {
       var snapshot = await FirebaseFirestore.instance
-          .collection('complains')
-          .where('receiver', isEqualTo: user?.email)
+          .collection('complains') // Ensure the collection name matches
+          .where('receiver',
+              isEqualTo: user?.uid) // Changed to use UID instead of email
           .orderBy('timestamp', descending: true)
           .get();
 
@@ -32,7 +33,7 @@ class _ComplainPageState extends State<ComplainPage> {
         complaints = snapshot.docs;
       });
     } catch (error) {
-      //print('Error fetching complaints: $error');
+      print('Error fetching complaints: $error');
     }
   }
 
@@ -49,7 +50,7 @@ class _ComplainPageState extends State<ComplainPage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
-                onPressed: _fetchComplaints, // Reuse existing function
+                onPressed: _fetchComplaints,
                 child: const Text('Refresh'),
               ),
             ),
@@ -59,7 +60,8 @@ class _ComplainPageState extends State<ComplainPage> {
               itemCount: complaints.length,
               itemBuilder: (context, index) {
                 final complaint = complaints[index];
-                final String message = complaint['message'];
+                final String message =
+                    complaint['complaint']; // Ensure the field name matches
                 final String sender = complaint['sender'];
                 final Timestamp timestamp = complaint['timestamp'];
 

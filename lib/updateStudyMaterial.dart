@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class UpdateStudyMaterialPage extends StatefulWidget {
   const UpdateStudyMaterialPage({Key? key}) : super(key: key);
@@ -16,15 +18,17 @@ class UpdateStudyMaterialPage extends StatefulWidget {
 class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
-  late String _selectedStandard;
+  String? _selectedStandard;
   File? _selectedFile;
+  bool _isLoading = false;
+  String? _selectedMaterialId;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
-    _selectedStandard = 'Std 5';
+    _selectedStandard = null;
   }
 
   @override
@@ -64,7 +68,7 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
     String title = _titleController.text;
     String description = _descriptionController.text;
 
-    if (title.isEmpty || description.isEmpty) {
+    if (_selectedStandard == null || title.isEmpty || description.isEmpty) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -84,6 +88,9 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
       );
       return;
     }
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       String? fileUrl;
@@ -97,14 +104,30 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
         fileUrl = await taskSnapshot.ref.getDownloadURL();
       }
 
-      // Save the study material details to Firestore
-      await FirebaseFirestore.instance.collection('studyMaterial').add({
-        'standard': _selectedStandard,
-        'title': title,
-        'description': description,
-        'fileUrl': fileUrl,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      // Save or update the study material details to Firestore
+      if (_selectedMaterialId == null) {
+        await FirebaseFirestore.instance.collection('studyMaterial').add({
+          'standard': _selectedStandard,
+          'title': title,
+          'description': description,
+          'fileUrl': fileUrl,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await FirebaseFirestore.instance
+            .collection('studyMaterial')
+            .doc(_selectedMaterialId)
+            .update({
+          'standard': _selectedStandard,
+          'title': title,
+          'description': description,
+          'fileUrl': fileUrl,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Send notification to the selected standard
+      await _sendNotification();
 
       // Show a success dialog
       showDialog(
@@ -122,6 +145,8 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
                   _descriptionController.clear();
                   setState(() {
                     _selectedFile = null;
+                    _selectedStandard = null;
+                    _selectedMaterialId = null;
                   });
                 },
                 child: const Text('OK'),
@@ -131,7 +156,6 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
         },
       );
     } catch (e) {
-      //print('Error uploading study material: $e');
       // Show an error dialog
       showDialog(
         context: context,
@@ -150,7 +174,92 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
           );
         },
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
+
+  Future<void> _sendNotification() async {
+    try {
+      final QuerySnapshot<Map<String, dynamic>> result =
+          await FirebaseFirestore.instance.collection('Darvesh Classes').get();
+
+      List<String> tokens = [];
+      for (var doc in result.docs) {
+        if (doc.data().containsKey('std') &&
+            doc.data().containsKey('fcmToken')) {
+          if (doc.data()['std'] == _selectedStandard) {
+            tokens.add(doc.data()['fcmToken']);
+          }
+        }
+      }
+
+      if (tokens.isEmpty) {
+        throw Exception('No tokens found for the selected standard');
+      }
+
+      const String serverKey =
+          'AAAAdjfDsd4:APA91bGBzOGZa1VEAssIAlxhJfVuXBZVWQD6yDjgE4RUT73Cx4RU7KS9APYl5y_wRWdX98Kfo38cjlywY5iPV_pt9EXxtHsrkOGJBUztasm0cSM1U4Tjcu86am3q58PWiJDkxaCFACl8'; // Replace with your actual server key
+      final Uri url = Uri.parse('https://fcm.googleapis.com/fcm/send');
+
+      final Map<String, dynamic> payload = {
+        'registration_ids': tokens,
+        'notification': {
+          'title': 'New Study Material',
+          'body': 'Study material posted. Check it out!',
+        },
+      };
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'key=$serverKey',
+      };
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: json.encode(payload),
+      );
+
+      if (response.statusCode != 200) {
+        print('FCM request failed with status: ${response.statusCode}');
+        print('FCM response body: ${response.body}');
+        throw Exception('Failed to send notification');
+      }
+    } catch (e) {
+      // Handle notification sending errors
+      print('Error sending notification: $e');
+      print(_selectedStandard);
+      throw Exception('Failed to send notification');
+    }
+  }
+
+  Future<void> _deleteMaterial(String materialId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('studyMaterial')
+          .doc(materialId)
+          .delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Study material deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete study material')),
+      );
+    }
+  }
+
+  Future<void> _editMaterial(DocumentSnapshot material) async {
+    setState(() {
+      _selectedMaterialId = material.id;
+      _selectedStandard = material['standard'];
+      _titleController.text = material['title'];
+      _descriptionController.text = material['description'];
+      // File handling should be done if there's a need to update the file
+    });
   }
 
   @override
@@ -168,7 +277,7 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
               value: _selectedStandard,
               onChanged: (String? newValue) {
                 setState(() {
-                  _selectedStandard = newValue!;
+                  _selectedStandard = newValue;
                 });
               },
               items: [
@@ -219,6 +328,54 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
             ElevatedButton(
               onPressed: _uploadFile,
               child: const Text('Upload Study Material'),
+            ),
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('studyMaterial')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return const Center(
+                        child: Text('Error loading study materials'));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                        child: Text('No study materials available'));
+                  }
+
+                  return ListView(
+                    children: snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return ListTile(
+                        title: Text(data['title'] ?? 'No Title'),
+                        subtitle: Text(data['description'] ?? 'No Description'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _editMaterial(doc),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _deleteMaterial(doc.id),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
             ),
           ],
         ),
