@@ -1,14 +1,8 @@
-# darvesh_classes
+# Darvesh Classes
 
 ## Getting Started
 
 This project was created in order to fullfill the general requirements of a coaching class
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Planned Database Structure
+![Alt text](https://github.com/devdantic/Darvesh-Classes/blob/supabase-migration/media/db-er-darvesh_classes.png)
