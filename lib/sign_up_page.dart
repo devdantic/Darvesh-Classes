@@ -8,6 +8,8 @@ import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'theme.dart';
+import 'firebase_message.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -49,12 +51,12 @@ class _SignUpPageState extends State<SignUpPage> {
         _isLoading = true;
       });
 
-      String email = _emailController.text;
-      String password = _passwordController.text;
-      String name = _nameController.text;
+      String email = _emailController.text.trim();
+      String password = _passwordController.text.trim();
+      String name = _nameController.text.trim();
       String? std = _selectedStandard;
-      String address = _addressController.text;
-      String phoneNumber = _phoneNumberController.text;
+      String address = _addressController.text.trim();
+      String phoneNumber = _phoneNumberController.text.trim();
 
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
@@ -105,28 +107,27 @@ class _SignUpPageState extends State<SignUpPage> {
         );
 
         // Show success dialog
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Success'),
-              content: const Text(
-                  "Sign-up successful.\nNow you can Sign In with Email & Password"),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Success'),
+                content: const Text(
+                    "Sign-up successful.\nNow you can Sign In with Email & Password"),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context); // Go back to login screen
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'An error occurred';
@@ -142,24 +143,24 @@ class _SignUpPageState extends State<SignUpPage> {
           errorMessage = 'The email address is not valid.';
           break;
         default:
-          errorMessage = 'An error occurred';
+          errorMessage = e.message ?? 'An error occurred';
           break;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
-
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sign-up failed'),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red[700],
         ),
       );
-
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Sign-up failed'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
+    } finally {
       setState(() {
         _isLoading = false;
       });
@@ -168,8 +169,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<void> _sendNotification(
       String title, String body, String token) async {
-    const String serverKey =
-        'AAAAdjfDsd4:APA91bGBzOGZa1VEAssIAlxhJfVuXBZVWQD6yDjgE4RUT73Cx4RU7KS9APYl5y_wRWdX98Kfo38cjlywY5iPV_pt9EXxtHsrkOGJBUztasm0cSM1U4Tjcu86am3q58PWiJDkxaCFACl8';
+    const String serverKey = FcmConfig.serverKey;
     const String url = 'https://fcm.googleapis.com/fcm/send';
 
     final Map<String, dynamic> payload = {
@@ -241,200 +241,208 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: const Text('Create Account'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: ListView(
-          children: [
-            GestureDetector(
-              onTap: _selectImage,
-              child: Container(
-                height: 150,
-                width: 150,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(75),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.bgGradient,
+        ),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(24.0),
+            children: [
+              // Styled Portrait Picker Button
+              Center(
+                child: GestureDetector(
+                  onTap: _selectImage,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: AppTheme.softShadow,
+                    ),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.white,
+                      backgroundImage: _selectedImage != null
+                          ? FileImage(File(_selectedImage!.path))
+                          : null,
+                      child: _selectedImage == null
+                          ? const Icon(
+                              Icons.add_a_photo_outlined,
+                              size: 40,
+                              color: AppTheme.primaryColor,
+                            )
+                          : null,
+                    ),
+                  ),
                 ),
-                child: _selectedImage != null
-                    ? Image.file(
-                        File(_selectedImage!.path),
-                        fit: BoxFit.cover,
-                      )
-                    : const Icon(
-                        Icons.person,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
               ),
-            ),
-            if (_selectedImage == null)
-              const Center(
+              const SizedBox(height: 12),
+              Center(
                 child: Text(
-                  'Click on the above icon to select the image',
-                  style: TextStyle(color: Colors.black),
+                  _selectedImage == null
+                      ? 'Tap icon to upload profile photo'
+                      : 'Tap photo to change photo',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textLight,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
               ),
-            const SizedBox(height: 10),
-            const Text(
-              'Profile Image',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Name',
-                        border: OutlineInputBorder(),
+              const SizedBox(height: 24),
+              // Card container for fields
+              Card(
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      // Name
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Name',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedStandard,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedStandard = newValue;
-                        });
-                      },
-                      items: <String>[
-                        'Std 5',
-                        'Std 6',
-                        'Std 7',
-                        'Std 8',
-                        'Std 9',
-                        'Std 10',
-                      ].map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      decoration: const InputDecoration(
-                        labelText: 'Standard',
-                        border: OutlineInputBorder(),
+                      const SizedBox(height: 16),
+                      // Standard Dropdown
+                      DropdownButtonFormField<String>(
+                        value: _selectedStandard,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedStandard = newValue;
+                          });
+                        },
+                        items: <String>[
+                          'Std 5',
+                          'Std 6',
+                          'Std 7',
+                          'Std 8',
+                          'Std 9',
+                          'Std 10',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: const InputDecoration(
+                          labelText: 'Standard',
+                          prefixIcon: Icon(Icons.school_outlined),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select your standard';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please select your standard';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: TextFormField(
-                      controller: _addressController,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
+                      const SizedBox(height: 16),
+                      // Address
+                      TextFormField(
+                        controller: _addressController,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          prefixIcon: Icon(Icons.home_outlined),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your address';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your address';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: TextFormField(
-                      controller: _phoneNumberController,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        border: OutlineInputBorder(),
+                      const SizedBox(height: 16),
+                      // Phone Number
+                      TextFormField(
+                        controller: _phoneNumberController,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone Number',
+                          prefixIcon: Icon(Icons.phone_outlined),
+                        ),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your phone number';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
+                      const SizedBox(height: 16),
+                      // Email
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: TextFormField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
+                      const SizedBox(height: 16),
+                      // Password
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
                       ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: ElevatedButton(
-                      onPressed:
-                          _isLoading ? null : _signUpWithEmailAndPassword,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        minimumSize: const Size(double.infinity, 50),
-                        textStyle: const TextStyle(fontSize: 18),
+                      const SizedBox(height: 24),
+                      // Submit Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _signUpWithEmailAndPassword,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Text('Register'),
+                        ),
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text("Register"),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        minimumSize: const Size(double.infinity, 50),
-                        textStyle: const TextStyle(fontSize: 18),
+                      const SizedBox(height: 12),
+                      // Go Back Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Already have an account? Sign In'),
+                        ),
                       ),
-                      child: const Text('Go Back'),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

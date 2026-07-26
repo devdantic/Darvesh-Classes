@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'firebase_message.dart';
 
 class UpdateStudyMaterialPage extends StatefulWidget {
   const UpdateStudyMaterialPage({Key? key}) : super(key: key);
@@ -200,8 +201,7 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
         throw Exception('No tokens found for the selected standard');
       }
 
-      const String serverKey =
-          'AAAAdjfDsd4:APA91bGBzOGZa1VEAssIAlxhJfVuXBZVWQD6yDjgE4RUT73Cx4RU7KS9APYl5y_wRWdX98Kfo38cjlywY5iPV_pt9EXxtHsrkOGJBUztasm0cSM1U4Tjcu86am3q58PWiJDkxaCFACl8'; // Replace with your actual server key
+      const String serverKey = FcmConfig.serverKey;
       final Uri url = Uri.parse('https://fcm.googleapis.com/fcm/send');
 
       final Map<String, dynamic> payload = {

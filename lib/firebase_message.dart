@@ -17,3 +17,8 @@ class FirebaseApi {
     print(ans);
   }
 }
+
+class FcmConfig {
+  static const String serverKey =
+      'AAAAdjfDsd4:APA91bGBzOGZa1VEAssIAlxhJfVuXBZVWQD6yDjgE4RUT73Cx4RU7KS9APYl5y_wRWdX98Kfo38cjlywY5iPV_pt9EXxtHsrkOGJBUztasm0cSM1U4Tjcu86am3q58PWiJDkxaCFACl8';
+}

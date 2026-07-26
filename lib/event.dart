@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'firebase_message.dart';
 
 class AddEventPage extends StatefulWidget {
-  const AddEventPage({Key? key}) : super(key: key);
+  const AddEventPage({super.key});
 
   @override
   _AddEventPageState createState() => _AddEventPageState();
@@ -168,8 +169,7 @@ class _AddEventPageState extends State<AddEventPage> {
 
       final headers = {
         'Content-Type': 'application/json',
-        'Authorization':
-            'key=AAAAdjfDsd4:APA91bGBzOGZa1VEAssIAlxhJfVuXBZVWQD6yDjgE4RUT73Cx4RU7KS9APYl5y_wRWdX98Kfo38cjlywY5iPV_pt9EXxtHsrkOGJBUztasm0cSM1U4Tjcu86am3q58PWiJDkxaCFACl8',
+        'Authorization': 'key=${FcmConfig.serverKey}',
       };
 
       final response = await http.post(
