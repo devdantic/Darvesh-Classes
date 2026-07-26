@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'firebase_message.dart';
 
 class MessageToSirPage extends StatefulWidget {
   const MessageToSirPage({Key? key}) : super(key: key);
@@ -128,8 +129,7 @@ class _MessageToSirPageState extends State<MessageToSirPage> {
 
   Future<void> _sendNotification(
       String title, String body, String token) async {
-    const String serverKey =
-        'AAAAdjfDsd4:APA91bGBzOGZa1VEAssIAlxhJfVuXBZVWQD6yDjgE4RUT73Cx4RU7KS9APYl5y_wRWdX98Kfo38cjlywY5iPV_pt9EXxtHsrkOGJBUztasm0cSM1U4Tjcu86am3q58PWiJDkxaCFACl8';
+    const String serverKey = FcmConfig.serverKey;
     const String url = 'https://fcm.googleapis.com/fcm/send';
 
     final Map<String, dynamic> payload = {

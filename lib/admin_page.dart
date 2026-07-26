@@ -2,7 +2,6 @@ import 'package:darvesh_classes/check_attendance.dart';
 import 'package:darvesh_classes/event.dart';
 import 'package:darvesh_classes/group_message_admin.dart';
 import 'package:darvesh_classes/send_complains_admin.dart';
-import 'package:darvesh_classes/student_analysis.dart';
 import 'package:darvesh_classes/updateStudyMaterial.dart';
 import 'package:darvesh_classes/verify_student_requests.dart';
 import 'package:flutter/material.dart';
@@ -12,115 +11,148 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'empty_database_page.dart';
 import 'view_messages_page.dart';
+import 'theme.dart';
 
 class AdminPage extends StatelessWidget {
-  const AdminPage({Key? key}) : super(key: key);
+  const AdminPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Page'),
+        title: const Text('Admin Console'),
         actions: [
           IconButton(
-            onPressed: () {
-              _signOut(context);
-            },
+            onPressed: () => _signOut(context),
             icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
           ),
         ],
       ),
-      body: Center(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.bgGradient,
+        ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            const Text(
-              'Welcome, Sanjay Sir!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // Admin Welcome Header Card
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 8.0),
+              child: Card(
+                elevation: 0,
+                color: Colors.transparent,
+                margin: EdgeInsets.zero,
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      child: const Icon(
+                        Icons.admin_panel_settings,
+                        size: 36,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome Back,',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.textLight.withValues(alpha: 0.8),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Sanjay Sir',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            // Admin Hub Menu Grid
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                padding: const EdgeInsets.all(10),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                padding: const EdgeInsets.all(24),
                 children: [
-                  buildButton(
+                  _buildAdminCard(
                     context,
                     const UpdateStudyMaterialPage(),
-                    'Update Study Material',
-                    Icons.library_books,
-                    Colors.blue,
+                    'Study Material',
+                    Icons.library_books_outlined,
+                    const [Color(0xFF1E88E5), Color(0xFF1976D2)],
                   ),
-                  buildButton(
+                  _buildAdminCard(
                     context,
                     const MarkAttendancePage(),
-                    'Mark Attendance',
-                    Icons.calendar_today,
-                    Colors.orange,
+                    'Attendance',
+                    Icons.calendar_today_outlined,
+                    const [Color(0xFFFB8C00), Color(0xFFF57C00)],
                   ),
-                  buildButton(
+                  _buildAdminCard(
                     context,
                     const StudentComplainsPage(),
-                    'Send Complains',
-                    Icons.notifications,
-                    Colors.green,
+                    'Complains',
+                    Icons.assignment_late_outlined,
+                    const [Color(0xFFE53935), Color(0xFFC62828)],
                   ),
-                  buildButton(
+                  _buildAdminCard(
                     context,
                     const AddEventPage(),
-                    'Add Events in the Calendar',
-                    Icons.event,
-                    Colors.purple,
+                    'Calendar Events',
+                    Icons.event_outlined,
+                    const [Color(0xFF8E24AA), Color(0xFF7B1FA2)],
                   ),
-                  buildButton(
+                  _buildAdminCard(
                     context,
                     const SendMessagePage(),
-                    'Send Group Messages',
-                    Icons.message,
-                    Colors.red,
-                    fullWidth: true,
+                    'Group Message',
+                    Icons.forum_outlined,
+                    const [Color(0xFF43A047), Color(0xFF2E7D32)],
                   ),
-                  buildButton(
+                  _buildAdminCard(
                     context,
                     const CheckAttendancePage(),
-                    'Check Attendance',
-                    Icons.verified_user_rounded,
-                    Colors.brown,
+                    'Check Report',
+                    Icons.assignment_turned_in_outlined,
+                    const [Color(0xFF6D4C41), Color(0xFF4E342E)],
                   ),
-                  buildButton(
-                    context,
-                    const Analysis(),
-                    "Student's Analysis",
-                    Icons.analytics,
-                    Colors.indigoAccent,
-                  ),
-                  buildButton(
-                    context,
-                    const EmptyDatabasePage(),
-                    // New button for emptying the database
-                    'Empty Database',
-                    Icons.delete,
-                    Colors.grey,
-                    fullWidth: true,
-                  ),
-                  buildButton(
+                  _buildAdminCard(
                     context,
                     const VerifyStudentRequestsPage(),
-                    'Verify Student Requests',
-                    Icons.verified_user_outlined,
-                    Colors.teal,
-                    fullWidth: true,
+                    'Student Requests',
+                    Icons.people_outline,
+                    const [Color(0xFF00ACC1), Color(0xFF00838F)],
                   ),
-                  buildButton(
+                  _buildAdminCard(
                     context,
-                    const ViewMessagesPage(), // New button for viewing messages
-                    'View Messages',
-                    Icons.message_outlined,
-                    Colors.blueGrey,
-                    fullWidth: true,
+                    const ViewMessagesPage(),
+                    'Inbound Messages',
+                    Icons.chat_bubble_outline,
+                    const [Color(0xFF3F51B5), Color(0xFF303F9F)],
+                  ),
+                  _buildAdminCard(
+                    context,
+                    const EmptyDatabasePage(),
+                    'Reset Database',
+                    Icons.delete_outline,
+                    const [Color(0xFF757575), Color(0xFF616161)],
                   ),
                 ],
               ),
@@ -131,43 +163,57 @@ class AdminPage extends StatelessWidget {
     );
   }
 
-  Widget buildButton(BuildContext context, Widget page, String label,
-      IconData icon, Color color,
-      {bool fullWidth = false}) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => page),
-        );
-      },
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+  Widget _buildAdminCard(BuildContext context, Widget page, String label,
+      IconData icon, List<Color> gradientColors) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        color: color,
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 40,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: gradientColors[0].withValues(alpha: 0.3),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => page),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 36,
                   color: Colors.white,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -176,8 +222,8 @@ class AdminPage extends StatelessWidget {
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-      await _firebaseAuth.signOut();
+      final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+      await firebaseAuth.signOut();
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Navigator.pushReplacement(

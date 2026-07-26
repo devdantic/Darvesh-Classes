@@ -6,9 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'sign_up_page.dart';
 import 'admin_page.dart';
 import 'home_page.dart';
+import 'theme.dart';
+
 
 class AuthenticationPage extends StatefulWidget {
-  const AuthenticationPage({Key? key}) : super(key: key);
+  const AuthenticationPage({super.key});
 
   @override
   _AuthenticationPageState createState() => _AuthenticationPageState();
@@ -58,81 +60,182 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       return const HomePage();
     } else {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Authentication'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureText ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.grey,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: AppTheme.bgGradient,
+          ),
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Brand Logo
+                    Container(
+                      height: 100,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: AppTheme.softShadow,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureText = !_obscureText;
-                        });
-                      },
-                    ),
-                  ),
-                  obscureText: _obscureText,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signInWithEmailAndPassword,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Sign In'),
-                ),
-              ),
-              TextButton(
-                onPressed: _resetPassword,
-                child: const Text('Forgot Password?'),
-              ),
-              const SizedBox(height: 20),
-              const Text('Don\'t have an account?'),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const SignUpPage()),
+                      padding: const EdgeInsets.all(12),
+                      child: Image.asset(
+                        'media/DC_logo_2.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.school,
+                            size: 50,
+                            color: AppTheme.primaryColor,
                           );
                         },
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Sign Up'),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Darvesh Classes',
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                            fontSize: 28,
+                            color: AppTheme.primaryColor,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Shaping Futures, Building Excellence',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textLight,
+                          ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Centered Card for Login Form
+                    Card(
+                      elevation: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Welcome Back',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppTheme.textDark,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            // Email Field
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: const InputDecoration(
+                                labelText: 'Email Address',
+                                prefixIcon: Icon(Icons.email_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Password Field
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscureText,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureText
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: AppTheme.textLight,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureText = !_obscureText;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // Forgot Password TextButton
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: _resetPassword,
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Text('Forgot Password?'),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Sign In Button
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : _signInWithEmailAndPassword,
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : const Text('Sign In'),
+                            ),
+                            const SizedBox(height: 20),
+                            // Divider
+                            Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text(
+                                    'OR',
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ),
+                                const Expanded(child: Divider()),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            // Register Button
+                            OutlinedButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => const SignUpPage()),
+                                      );
+                                    },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppTheme.primaryColor),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Create an Account',
+                                style: TextStyle(
+                                  color: AppTheme.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       );
@@ -145,8 +248,12 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
         _isLoading = true;
       });
 
-      String email = _emailController.text;
-      String password = _passwordController.text;
+      String email = _emailController.text.trim();
+      String password = _passwordController.text.trim();
+
+      if (email.isEmpty || password.isEmpty) {
+        throw Exception('Fields cannot be empty');
+      }
 
       // Check if the email is in the student_requests collection
       QuerySnapshot<Map<String, dynamic>> querySnapshot =
@@ -163,23 +270,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           _isVerificationPending = true;
           _isLoading = false;
         });
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Verification Pending'),
-              content: const Text(
-                  'Your account verification is still pending. Please wait for admin approval.'),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
+        _showStyledDialog(
+          'Verification Pending',
+          'Your account verification is still pending. Please wait for admin approval.',
         );
         return; // Exit the function early if verification is pending
       }
@@ -212,22 +305,11 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           );
         }
 
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Success'),
-              content: const Text('Sign-in successful'),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sign-in successful!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -244,32 +326,18 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           errorMessage = 'The email address is not valid.';
           break;
         default:
-          errorMessage = 'An error occurred';
+          errorMessage = e.message ?? 'An error occurred';
           break;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red[700],
+        ),
       );
     } catch (e) {
-      // Handle sign-in errors
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Sign-in failed'),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+      _showStyledDialog('Error', e.toString().contains('Fields cannot be empty') ? 'Please enter email and password.' : 'Sign-in failed.');
     } finally {
       setState(() {
         _isLoading = false;
@@ -278,37 +346,33 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   }
 
   Future<void> _resetPassword() async {
+    String email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email address to reset password.'),
+          backgroundColor: Colors.amber,
+        ),
+      );
+      return;
+    }
+
     try {
       setState(() {
         _isLoading = true;
       });
 
-      String email = _emailController.text;
-
       await _firebaseAuth.sendPasswordResetEmail(email: email);
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Password reset email sent'),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
+      _showStyledDialog(
+        'Success',
+        'Password reset email sent to $email. Please check your inbox.',
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Password reset failed. Please enter the email to reset the password'),
+        SnackBar(
+          content: Text('Password reset failed: $e'),
+          backgroundColor: Colors.red[700],
         ),
       );
     } finally {
@@ -316,6 +380,27 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _showStyledDialog(String title, String content) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<bool> checkUserStatus(String email) async {
