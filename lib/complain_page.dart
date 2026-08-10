@@ -23,9 +23,9 @@ class _ComplainPageState extends State<ComplainPage> {
   Future<void> _fetchComplaints() async {
     try {
       var snapshot = await FirebaseFirestore.instance
-          .collection('complains') // Ensure the collection name matches
+          .collection('complains')
           .where('receiver',
-              isEqualTo: user?.uid) // Changed to use UID instead of email
+              isEqualTo: user?.uid)
           .orderBy('timestamp', descending: true)
           .get();
 
@@ -61,7 +61,7 @@ class _ComplainPageState extends State<ComplainPage> {
               itemBuilder: (context, index) {
                 final complaint = complaints[index];
                 final String message =
-                    complaint['complaint']; // Ensure the field name matches
+                    complaint['complaint'];
                 final String sender = complaint['sender'];
                 final Timestamp timestamp = complaint['timestamp'];
 

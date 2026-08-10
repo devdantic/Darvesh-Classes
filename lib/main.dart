@@ -8,13 +8,20 @@ import 'firebase_message.dart';
 import 'theme.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Catches any error during widget build so the app doesn't grey-screen
+
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
   };
+
+  await Supabase.initialize(
+    url: 'https://ulxemdfldbybyrxqsghh.supabase.co',
+    publishableKey: 'sb_publishable_7KgMpezYOS2r-IiR_QdWGg_CemimK0w',
+  );
+
   runApp(const IntroPage());
 }
 
@@ -33,7 +40,7 @@ class IntroPage extends StatelessWidget {
 }
 
 /// --------------------------------------------------------------------------
-/// APP INITIALIZER (Updated for seamless transition)
+/// APP INITIALIZER
 /// --------------------------------------------------------------------------
 class AppInitializer extends StatefulWidget {
   const AppInitializer({super.key});
@@ -56,7 +63,7 @@ class _AppInitializerState extends State<AppInitializer> {
     try {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       await FirebaseAppCheck.instance.activate(
-        AndroidProvider: AndroidProvider.debug
+        providerAndroid: const AndroidPlayIntegrityProvider()
       );
       await FirebaseApi().initNotification();
       final messaging = FirebaseMessaging.instance;
