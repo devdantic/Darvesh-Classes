@@ -33,6 +33,8 @@ dependencies:
   firebase_core: ^4.11.0
   firebase_auth: ^6.5.4
   firebase_app_check: ^0.4.2
+  path: ^1.9.1
+  supabase_flutter: ^2.10.0
   google_fonts: ^6.2.1
   google_sign_in: ^7.2.0
   flutter_svg: ^2.0.7
