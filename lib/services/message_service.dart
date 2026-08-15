@@ -8,7 +8,38 @@ class MessageService {
   final SupabaseClient _client = Supabase.instance.client;
 
   /// ---------------------------------------------------------
-  /// SEND MESSAGE
+  /// SEND GROUP BROADCAST MESSAGE
+  /// ---------------------------------------------------------
+  Future<void> sendGroupMessage({
+    required String title,
+    required String content,
+    required String standard,
+    String sender = 'Sanjay Sir',
+  }) async {
+    await _client.from('messages').insert({
+      'title': title,
+      'message': content,
+      'standard': standard,
+      'sender': sender,
+    });
+  }
+
+  /// ---------------------------------------------------------
+  /// UPDATE MESSAGE
+  /// ---------------------------------------------------------
+  Future<void> updateMessage({
+    required String messageId,
+    required String title,
+    required String content,
+  }) async {
+    await _client.from('messages').update({
+      'title': title,
+      'message': content,
+    }).eq('id', messageId);
+  }
+
+  /// ---------------------------------------------------------
+  /// SEND MESSAGE (INDIVIDUAL STUDENT)
   /// ---------------------------------------------------------
   Future<void> sendMessage({
     required String studentId,
