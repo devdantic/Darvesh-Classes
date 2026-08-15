@@ -8,39 +8,56 @@ class MessageService {
   final SupabaseClient _client = Supabase.instance.client;
 
   /// ---------------------------------------------------------
-  /// SEND GROUP BROADCAST MESSAGE
+  /// ANNOUNCEMENTS (GROUP BROADCASTS)
   /// ---------------------------------------------------------
+
+  /// Send Group Broadcast Announcement
   Future<void> sendGroupMessage({
     required String title,
     required String content,
     required String standard,
     String sender = 'Sanjay Sir',
   }) async {
-    await _client.from('messages').insert({
+    await _client.from('announcements').insert({
       'title': title,
-      'message': content,
+      'content': content,
       'standard': standard,
       'sender': sender,
     });
   }
 
-  /// ---------------------------------------------------------
-  /// UPDATE MESSAGE
-  /// ---------------------------------------------------------
-  Future<void> updateMessage({
-    required String messageId,
+  /// Get All Group Announcements (Ordered newest first)
+  Future<List<Map<String, dynamic>>> getAllAnnouncements() async {
+    final response = await _client
+        .from('announcements')
+        .select()
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Update Group Announcement
+  Future<void> updateAnnouncement({
+    required String id,
     required String title,
     required String content,
   }) async {
-    await _client.from('messages').update({
+    await _client.from('announcements').update({
       'title': title,
-      'message': content,
-    }).eq('id', messageId);
+      'content': content,
+    }).eq('id', id);
+  }
+
+  /// Delete Group Announcement
+  Future<void> deleteAnnouncement(String id) async {
+    await _client.from('announcements').delete().eq('id', id);
   }
 
   /// ---------------------------------------------------------
-  /// SEND MESSAGE (INDIVIDUAL STUDENT)
+  /// INDIVIDUAL STUDENT MESSAGES
   /// ---------------------------------------------------------
+
+  /// Send message to an individual student
   Future<void> sendMessage({
     required String studentId,
     required String message,
@@ -51,10 +68,7 @@ class MessageService {
     });
   }
 
-  /// ---------------------------------------------------------
-  /// GET ALL MESSAGES
-  /// Used by Admin
-  /// ---------------------------------------------------------
+  /// Get all individual student messages (Used by Admin)
   Future<List<Map<String, dynamic>>> getAllMessages() async {
     final response = await _client
         .from('messages')
@@ -62,14 +76,10 @@ class MessageService {
         .order('created_at', ascending: false);
 
     return List<Map<String, dynamic>>.from(response);
-
   }
 
-  /// ---------------------------------------------------------
-  /// GET MESSAGES OF A STUDENT
-  /// ---------------------------------------------------------
-  Future<List<Map<String, dynamic>>> getStudentMessages(
-      String studentId) async {
+  /// Get individual messages of a student
+  Future<List<Map<String, dynamic>>> getStudentMessages(String studentId) async {
     final response = await _client
         .from('messages')
         .select()
@@ -79,38 +89,15 @@ class MessageService {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// ---------------------------------------------------------
-  /// GET CURRENT USER MESSAGES
-  /// ---------------------------------------------------------
+  /// Get current user's individual messages
   Future<List<Map<String, dynamic>>> getMyMessages() async {
     final user = _client.auth.currentUser;
-
     if (user == null) return [];
-
     return getStudentMessages(user.id);
   }
 
-  /// ---------------------------------------------------------
-  /// GET SINGLE MESSAGE
-  /// ---------------------------------------------------------
-  Future<Map<String, dynamic>?> getMessage(
-      String messageId) async {
-    final response = await _client
-        .from('messages')
-        .select()
-        .eq('id', messageId)
-        .maybeSingle();
-
-    return response;
-  }
-
-  /// ---------------------------------------------------------
-  /// DELETE MESSAGE
-  /// ---------------------------------------------------------
+  /// Delete an individual message
   Future<void> deleteMessage(String messageId) async {
-    await _client
-        .from('messages')
-        .delete()
-        .eq('id', messageId);
+    await _client.from('messages').delete().eq('id', messageId);
   }
 }
