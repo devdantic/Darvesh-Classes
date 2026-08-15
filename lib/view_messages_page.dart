@@ -23,14 +23,14 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
   Future<void> _fetchMessages() async {
     setState(() => _isLoading = true);
     try {
-      final data = await MessageService.instance.getAllMessages();
+      final data = await MessageService.instance.getAllAnnouncements();
       if (mounted) {
         setState(() {
           _messages = data;
         });
       }
     } catch (e) {
-      debugPrint('Error fetching messages: $e');
+      debugPrint('Error fetching announcements: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

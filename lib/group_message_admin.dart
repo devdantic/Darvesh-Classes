@@ -46,14 +46,14 @@ class _SendMessagePageState extends State<SendMessagePage> {
   Future<void> _fetchMessages() async {
     setState(() => _isLoadingMessages = true);
     try {
-      final data = await MessageService.instance.getAllMessages();
+      final data = await MessageService.instance.getAllAnnouncements();
       if (mounted) {
         setState(() {
           _messages = data;
         });
       }
     } catch (e) {
-      debugPrint('Error fetching messages: $e');
+      debugPrint('Error fetching announcements: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoadingMessages = false);
@@ -139,13 +139,13 @@ class _SendMessagePageState extends State<SendMessagePage> {
     if (confirm != true) return;
 
     try {
-      await MessageService.instance.deleteMessage(messageId);
+      await MessageService.instance.deleteAnnouncement(messageId);
       if (mounted) {
-        _showSnackBar('Message deleted', Colors.red);
+        _showSnackBar('Announcement deleted', Colors.red);
         _fetchMessages();
       }
     } catch (e) {
-      debugPrint('Error deleting message: $e');
+      debugPrint('Error deleting announcement: $e');
     }
   }
 
@@ -187,13 +187,13 @@ class _SendMessagePageState extends State<SendMessagePage> {
                 final newTitle = editTitleController.text.trim();
                 final newContent = editContentController.text.trim();
                 if (newTitle.isNotEmpty && newContent.isNotEmpty) {
-                  await MessageService.instance.updateMessage(
-                    messageId: messageId,
+                  await MessageService.instance.updateAnnouncement(
+                    id: messageId,
                     title: newTitle,
                     content: newContent,
                   );
                   if (mounted) {
-                    _showSnackBar('Message updated!', const Color(0xFF10B981));
+                    _showSnackBar('Announcement updated!', const Color(0xFF10B981));
                     _fetchMessages();
                   }
                 }
