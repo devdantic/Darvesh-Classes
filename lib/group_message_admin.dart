@@ -78,7 +78,6 @@ class _SendMessagePageState extends State<SendMessagePage> {
         title: title,
         content: content,
         standard: _selectedStandard,
-        sender: 'Sanjay Sir',
       );
 
       // 2. Determine target topic

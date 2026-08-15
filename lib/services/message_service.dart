@@ -16,13 +16,11 @@ class MessageService {
     required String title,
     required String content,
     required String standard,
-    String sender = 'Sanjay Sir',
   }) async {
     await _client.from('announcements').insert({
       'title': title,
       'content': content,
       'standard': standard,
-      'sender': sender,
     });
   }
 
