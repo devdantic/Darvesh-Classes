@@ -286,7 +286,7 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
     }
   }
 
-  Map<String, int> _calculateCategoryCounts() {
+  Map<String, int> _calculateCategoryCounts(List<Map<String, dynamic>> sourceList) {
     final Map<String, int> counts = {
       'Disciplinary Warning': 0,
       'Low Attendance Warning': 0,
@@ -295,14 +295,21 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
       'General Notice': 0,
     };
 
-    for (var item in _allComplaints) {
-      final text = item['complaint'] as String? ?? '';
+    for (var item in sourceList) {
+      final text = (item['complaint'] as String? ?? '').toLowerCase();
       if (text.startsWith('[') && text.contains(']')) {
         final endIdx = text.indexOf(']');
-        final topic = text.substring(1, endIdx);
-        if (counts.containsKey(topic)) {
-          counts[topic] = counts[topic]! + 1;
-        } else {
+        final topicLower = text.substring(1, endIdx).toLowerCase();
+
+        bool matched = false;
+        for (var preset in _presetTopics) {
+          if (preset.toLowerCase() == topicLower) {
+            counts[preset] = (counts[preset] ?? 0) + 1;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
           counts['General Notice'] = (counts['General Notice'] ?? 0) + 1;
         }
       } else {
@@ -633,18 +640,35 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final categoryCounts = _calculateCategoryCounts();
-    final totalCount = _allComplaints.length;
+    // 1. Filter complaints by selected student for Pie Chart & Statistics
+    final studentFilteredComplaints = _allComplaints.where((c) {
+      if (_selectedStudentFilterId != 'All' && _selectedStudentFilterId != null) {
+        return c['student_id']?.toString() == _selectedStudentFilterId;
+      }
+      return true;
+    }).toList();
 
-    // Unique students flagged
-    final uniqueStudentIds = _allComplaints.map((c) => c['student_id']?.toString()).whereType<String>().toSet();
+    final categoryCounts = _calculateCategoryCounts(studentFilteredComplaints);
+    final totalCount = studentFilteredComplaints.length;
+    final uniqueStudentIds = studentFilteredComplaints.map((c) => c['student_id']?.toString()).whereType<String>().toSet();
 
-    // Filter complaints list
-    final filteredComplaints = _allComplaints.where((c) {
+    // Chart header subtitle
+    String chartSubtitle = 'All Students';
+    if (_selectedStudentFilterId != 'All' && _selectedStudentFilterId != null) {
+      final match = _students.firstWhere(
+        (s) => s['id']?.toString() == _selectedStudentFilterId,
+        orElse: () => {},
+      );
+      if (match.isNotEmpty) {
+        chartSubtitle = match['name'] as String? ?? 'Student';
+      }
+    }
+
+    // 2. Filter complaints list for search query and category chips
+    final filteredComplaints = studentFilteredComplaints.where((c) {
       final text = (c['complaint'] as String? ?? '').toLowerCase();
       final profile = c['profiles'] as Map<String, dynamic>?;
       final studentName = (profile?['name'] as String? ?? '').toLowerCase();
-      final studentId = c['student_id']?.toString() ?? '';
 
       final matchesQuery = _searchQuery.isEmpty ||
           studentName.contains(_searchQuery.toLowerCase()) ||
@@ -656,12 +680,7 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
         matchesCat = text.contains('[$catLower]') || text.contains(catLower);
       }
 
-      bool matchesStudent = true;
-      if (_selectedStudentFilterId != 'All' && _selectedStudentFilterId != null) {
-        matchesStudent = studentId == _selectedStudentFilterId;
-      }
-
-      return matchesQuery && matchesCat && matchesStudent;
+      return matchesQuery && matchesCat;
     }).toList();
 
     return RefreshIndicator(
@@ -709,9 +728,30 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Category Breakdown',
-                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Category Breakdown',
+                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            chartSubtitle,
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
