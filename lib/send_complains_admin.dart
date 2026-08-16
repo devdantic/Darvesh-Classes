@@ -924,12 +924,16 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
                                 children: [
                                   Row(
                                     children: [
-                                      Text(
-                                        studentName,
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.textDark,
+                                      Flexible(
+                                        child: Text(
+                                          studentName,
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.textDark,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
@@ -1016,7 +1020,7 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -1025,33 +1029,38 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textDark,
+                  ),
                 ),
-              ),
-              Text(
-                title,
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  color: AppTheme.textLight,
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 11,
+                    color: AppTheme.textLight,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
