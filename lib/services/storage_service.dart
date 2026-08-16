@@ -12,6 +12,7 @@ class StorageService {
 
   static const String avatarBucket = 'avatars';
   static const String studyMaterialBucket = 'study-materials';
+  static const String messageAttachmentBucket = 'message-attachments';
 
   /// ---------------------------------------------------------
   /// UPLOAD PROFILE IMAGE
@@ -72,6 +73,35 @@ class StorageService {
     );
 
     return filePath;
+  }
+
+  /// ---------------------------------------------------------
+  /// UPLOAD MESSAGE ATTACHMENT
+  /// Returns public URL of the uploaded file
+  /// ---------------------------------------------------------
+  Future<String> uploadMessageAttachment({
+    required String pathPrefix,
+    required File file,
+  }) async {
+    final fileName = path.basename(file.path);
+    final filePath = '$pathPrefix/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+
+    try {
+      await _client.storage.from(messageAttachmentBucket).upload(
+        filePath,
+        file,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      return _client.storage.from(messageAttachmentBucket).getPublicUrl(filePath);
+    } catch (_) {
+      // Fallback to studyMaterialBucket if messageAttachmentBucket isn't created yet
+      await _client.storage.from(studyMaterialBucket).upload(
+        filePath,
+        file,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      return _client.storage.from(studyMaterialBucket).getPublicUrl(filePath);
+    }
   }
 
   /// ---------------------------------------------------------
