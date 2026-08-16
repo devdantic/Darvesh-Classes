@@ -1,4 +1,3 @@
-import 'package:darvesh_classes/services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileService {
