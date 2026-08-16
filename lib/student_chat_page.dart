@@ -348,31 +348,42 @@ class _StudentChatPageState extends State<StudentChatPage> {
       ),
       body: Column(
         children: [
-          // Chat Thread View
+          // Real-time Chat Thread View
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _messages.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.chat_bubble_outline_rounded, size: 48, color: Colors.grey[400]),
-                            const SizedBox(height: 10),
-                            Text(
-                              'No messages yet. Start a conversation!',
-                              style: GoogleFonts.outfit(color: AppTheme.textLight, fontSize: 14),
-                            ),
-                          ],
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: MessageService.instance.streamConversation(widget.studentId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting && _isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final messages = snapshot.hasData ? snapshot.data! : _messages;
+
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat_bubble_outline_rounded, size: 48, color: Colors.grey[400]),
+                        const SizedBox(height: 10),
+                        Text(
+                          'No messages yet. Start a conversation!',
+                          style: GoogleFonts.outfit(color: AppTheme.textLight, fontSize: 14),
                         ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = _messages[index];
-                          final isFromAdmin = msg['is_from_admin'] as bool? ?? false;
+                      ],
+                    ),
+                  );
+                }
+
+                _scrollToBottom();
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isFromAdmin = msg['is_from_admin'] as bool? ?? false;
                           final isMe = widget.isAdminView ? isFromAdmin : !isFromAdmin;
 
                           final text = msg['message'] as String? ?? '';
@@ -489,7 +500,9 @@ class _StudentChatPageState extends State<StudentChatPage> {
                             ),
                           );
                         },
-                      ),
+                      );
+              },
+            ),
           ),
 
           // Attachment Banner Preview
