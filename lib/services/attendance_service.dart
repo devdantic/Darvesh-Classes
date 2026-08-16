@@ -95,6 +95,19 @@ class AttendanceService {
   }
 
   /// ---------------------------------------------------------
+  /// GET ALL ATTENDANCE RECORDS (WITH PROFILES)
+  /// Used by Admin Reports
+  /// ---------------------------------------------------------
+  Future<List<Map<String, dynamic>>> getAllAttendance() async {
+    final response = await _client
+        .from('attendance')
+        .select('*, profiles(name, standard, image_url, phone)')
+        .order('attendance_date', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// ---------------------------------------------------------
   /// GET ATTENDANCE BETWEEN TWO DATES
   /// ---------------------------------------------------------
   Future<List<Map<String, dynamic>>> getAttendanceBetweenDates({
