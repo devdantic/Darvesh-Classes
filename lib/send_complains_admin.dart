@@ -26,6 +26,7 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
   List<Map<String, dynamic>> _allComplaints = [];
   String _searchQuery = '';
   String _selectedCategoryFilter = 'All';
+  String? _selectedStudentFilterId = 'All';
 
   final List<String> _presetTopics = [
     'Disciplinary Warning',
@@ -643,6 +644,7 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
       final text = (c['complaint'] as String? ?? '').toLowerCase();
       final profile = c['profiles'] as Map<String, dynamic>?;
       final studentName = (profile?['name'] as String? ?? '').toLowerCase();
+      final studentId = c['student_id']?.toString() ?? '';
 
       final matchesQuery = _searchQuery.isEmpty ||
           studentName.contains(_searchQuery.toLowerCase()) ||
@@ -650,10 +652,16 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
 
       bool matchesCat = true;
       if (_selectedCategoryFilter != 'All') {
-        matchesCat = text.contains('[$_selectedCategoryFilter]');
+        final catLower = _selectedCategoryFilter.toLowerCase();
+        matchesCat = text.contains('[$catLower]') || text.contains(catLower);
       }
 
-      return matchesQuery && matchesCat;
+      bool matchesStudent = true;
+      if (_selectedStudentFilterId != 'All' && _selectedStudentFilterId != null) {
+        matchesStudent = studentId == _selectedStudentFilterId;
+      }
+
+      return matchesQuery && matchesCat && matchesStudent;
     }).toList();
 
     return RefreshIndicator(
@@ -783,6 +791,65 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
               style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
             ),
             const SizedBox(height: 10),
+
+            // Student Filter Dropdown
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.primaryLight.withValues(alpha: 0.4)),
+                boxShadow: AppTheme.softShadow,
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_alt_rounded, color: AppTheme.primaryColor, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Student:',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedStudentFilterId,
+                        isExpanded: true,
+                        icon: const Icon(Icons.arrow_drop_down_rounded, color: AppTheme.primaryColor),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'All',
+                            child: Text(
+                              'All Students (${_students.length})',
+                              style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                          ),
+                          ..._students.map((s) {
+                            final name = s['name'] as String? ?? 'Student';
+                            final std = (s['standard'] ?? s['std'])?.toString();
+                            final stdStr = std != null ? ' (Std $std)' : '';
+                            return DropdownMenuItem(
+                              value: s['id']?.toString() ?? '',
+                              child: Text(
+                                '$name$stdStr',
+                                style: GoogleFonts.outfit(fontSize: 13, color: AppTheme.textDark),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedStudentFilterId = val;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
             // Search TextField
             TextField(
