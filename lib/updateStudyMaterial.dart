@@ -337,14 +337,19 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
     if (filePath.isEmpty) return;
     final publicUrl = StorageService.instance.getStudyMaterialUrl(filePath);
     final uri = Uri.parse(publicUrl);
+    debugPrint('Launching study material URL: $publicUrl');
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        _showSnackBar('Could not open file URL', Colors.red);
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
       }
     } catch (e) {
-      _showSnackBar('Error opening file: $e', Colors.red);
+      debugPrint('Error launching URL: $e');
+      try {
+        await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      } catch (err) {
+        _showSnackBar('Could not open file: $err', Colors.red);
+      }
     }
   }
 
@@ -620,7 +625,7 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
                   if (_selectedFile != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Ready to upload to Supabase',
+                      'Ready to upload',
                       style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF10B981), fontWeight: FontWeight.bold),
                     ),
                   ],

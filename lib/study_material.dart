@@ -91,14 +91,19 @@ class _StudentStudyMaterialPageState extends State<StudentStudyMaterialPage> {
     if (filePath.isEmpty) return;
     final publicUrl = StorageService.instance.getStudyMaterialUrl(filePath);
     final uri = Uri.parse(publicUrl);
+    debugPrint('Launching study material URL: $publicUrl');
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        _showSnackBar('Could not open document URL', Colors.red);
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
       }
     } catch (e) {
-      _showSnackBar('Error opening file: $e', Colors.red);
+      debugPrint('Error launching URL: $e');
+      try {
+        await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      } catch (err) {
+        _showSnackBar('Could not open file: $err', Colors.red);
+      }
     }
   }
 
@@ -226,48 +231,7 @@ class _StudentStudyMaterialPageState extends State<StudentStudyMaterialPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Standard Chips Filter
-                    Text(
-                      'Select Class Standard',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textDark),
-                    ),
-                    const SizedBox(height: 8),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
-                        children: _availableStandards.map((std) {
-                          final isSelected = _selectedStandard == std;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: Text('Std $std'),
-                              selected: isSelected,
-                              selectedColor: AppTheme.primaryColor,
-                              backgroundColor: Colors.white,
-                              labelStyle: GoogleFonts.outfit(
-                                color: isSelected ? Colors.white : AppTheme.textDark,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                fontSize: 13,
-                              ),
-                              onSelected: (selected) {
-                                if (selected) {
-                                  setState(() {
-                                    _selectedStandard = std;
-                                  });
-                                  _fetchMaterials();
-                                }
-                              },
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: AppTheme.primaryLight.withValues(alpha: 0.3)),
-                              ),
-                              showCheckmark: false,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                    const SizedBox(height: 16),
                     const SizedBox(height: 16),
 
                     // Subject Chips Filter
