@@ -14,27 +14,46 @@ class ComplainPage extends StatefulWidget {
 class _ComplainPageState extends State<ComplainPage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _complaints = [];
-  Timer? _pollingTimer;
+  StreamSubscription<List<Map<String, dynamic>>>? _complaintsSubscription;
 
   @override
   void initState() {
     super.initState();
-    _fetchComplaints();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _fetchComplaints(isAutoPoll: true);
-    });
+    _subscribeToComplaints();
+  }
+
+  void _subscribeToComplaints() {
+    try {
+      _complaintsSubscription = ComplaintService.instance
+          .streamMyComplaints()
+          .listen(
+        (data) {
+          if (mounted) {
+            setState(() {
+              _complaints = data;
+              _isLoading = false;
+            });
+          }
+        },
+        onError: (e) {
+          debugPrint('Error streaming complaints: $e');
+          _fetchComplaints();
+        },
+      );
+    } catch (e) {
+      debugPrint('Error initiating complaint stream: $e');
+      _fetchComplaints();
+    }
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    _complaintsSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _fetchComplaints({bool isAutoPoll = false}) async {
-    if (!isAutoPoll) {
-      setState(() => _isLoading = true);
-    }
+  Future<void> _fetchComplaints() async {
+    setState(() => _isLoading = true);
     try {
       final data = await ComplaintService.instance.getMyComplaints();
       if (mounted) {
@@ -45,7 +64,7 @@ class _ComplainPageState extends State<ComplainPage> {
     } catch (e) {
       debugPrint('Error fetching student complaints: $e');
     } finally {
-      if (mounted && !isAutoPoll) {
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }

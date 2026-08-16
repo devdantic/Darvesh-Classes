@@ -41,42 +41,64 @@ class _StudentChatPageState extends State<StudentChatPage> {
   String? _attachedFileName;
 
   List<Map<String, dynamic>> _messages = [];
-  Timer? _pollingTimer;
+  StreamSubscription<List<Map<String, dynamic>>>? _messageSubscription;
 
   @override
   void initState() {
     super.initState();
-    _fetchConversation();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _fetchConversation(isAutoPoll: true);
-    });
+    _subscribeToConversation();
+  }
+
+  void _subscribeToConversation() {
+    try {
+      _messageSubscription = MessageService.instance
+          .streamConversation(widget.studentId)
+          .listen(
+        (data) {
+          if (mounted) {
+            final hasNewMessages = data.length != _messages.length;
+            setState(() {
+              _messages = data;
+              _isLoading = false;
+            });
+            if (hasNewMessages) {
+              _scrollToBottom();
+            }
+          }
+        },
+        onError: (e) {
+          debugPrint('Stream error in conversation: $e');
+          _fetchConversation();
+        },
+      );
+    } catch (e) {
+      debugPrint('Error subscribing to conversation stream: $e');
+      _fetchConversation();
+    }
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    _messageSubscription?.cancel();
     _textController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchConversation({bool isAutoPoll = false}) async {
+  Future<void> _fetchConversation() async {
     try {
       final data = await MessageService.instance.getConversation(widget.studentId);
       if (mounted) {
-        final hasNewMessages = data.length != _messages.length;
         setState(() {
           _messages = data;
           _isLoading = false;
         });
-        if (hasNewMessages || !isAutoPoll) {
-          _scrollToBottom();
-        }
+        _scrollToBottom();
       }
     } catch (e) {
       debugPrint('Error fetching conversation: $e');
-      if (mounted && !isAutoPoll) {
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }

@@ -100,6 +100,14 @@ class MessageService {
         .order('created_at', ascending: true);
   }
 
+  /// Stream all group announcements in real-time
+  Stream<List<Map<String, dynamic>>> streamAllAnnouncements() {
+    return _client
+        .from('announcements')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false);
+  }
+
   /// Get all individual student messages (Used by Admin)
   Future<List<Map<String, dynamic>>> getAllMessages() async {
     final response = await _client
@@ -108,6 +116,14 @@ class MessageService {
         .order('created_at', ascending: false);
 
     return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Stream all individual messages in real-time (Used by Admin)
+  Stream<List<Map<String, dynamic>>> streamAllMessages() {
+    return _client
+        .from('messages')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false);
   }
 
   /// Get individual messages of a student

@@ -66,7 +66,7 @@ class _AppInitializerState extends State<AppInitializer> {
           providerAndroid: const AndroidPlayIntegrityProvider(),
         );
       } catch (_) {}
-      await FirebaseApi().initNotification();
+      FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
       final messaging = FirebaseMessaging.instance;
       await messaging.setAutoInitEnabled(true);
       await _setupNotifications(messaging);
