@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'notification_service.dart';
 
 class ComplaintService {
   ComplaintService._();
@@ -8,7 +10,7 @@ class ComplaintService {
   final SupabaseClient _client = Supabase.instance.client;
 
   /// ---------------------------------------------------------
-  /// ADD COMPLAINT
+  /// ADD COMPLAINT & NOTIFY STUDENT
   /// ---------------------------------------------------------
   Future<void> addComplaint({
     required String studentId,
@@ -18,6 +20,18 @@ class ComplaintService {
       'student_id': studentId,
       'complaint': complaint,
     });
+
+    // Automatically send instant push notification to the student
+    try {
+      await NotificationService.instance.sendUserNotification(
+        userId: studentId,
+        title: '⚠️ Notice / Remark from Sanjay Sir',
+        body: complaint,
+        data: {'type': 'complaint'},
+      );
+    } catch (e) {
+      debugPrint('Error sending complaint push notification: $e');
+    }
   }
 
   /// ---------------------------------------------------------
