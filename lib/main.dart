@@ -51,55 +51,40 @@ class AppInitializer extends StatefulWidget {
 }
 
 class _AppInitializerState extends State<AppInitializer> {
-  bool _isReady = false;
-
   @override
   void initState() {
     super.initState();
-    _initialize();
+    // Run background Firebase & notification setup asynchronously without delaying splash screen launch
+    _initializeInBackground();
   }
 
-  Future<void> _initialize() async {
+  Future<void> _initializeInBackground() async {
     try {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-      await FirebaseAppCheck.instance.activate(
-        providerAndroid: const AndroidPlayIntegrityProvider(),
-      );
+      try {
+        await FirebaseAppCheck.instance.activate(
+          providerAndroid: const AndroidPlayIntegrityProvider(),
+        );
+      } catch (_) {}
       await FirebaseApi().initNotification();
       final messaging = FirebaseMessaging.instance;
       await messaging.setAutoInitEnabled(true);
       await _setupNotifications(messaging);
-
-      if (mounted) setState(() => _isReady = true);
     } catch (e) {
-      debugPrint('Initialization warning: $e');
-      if (mounted) setState(() => _isReady = true);
+      debugPrint('Background initialization warning: $e');
     }
   }
 
   Future<void> _setupNotifications(FirebaseMessaging messaging) async {
-    await Permission.notification.request();
-    await messaging.requestPermission(alert: true, badge: true, sound: true);
+    try {
+      await Permission.notification.request();
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isReady) {
-      return Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF1E40AF)],
-            ),
-          ),
-          child: const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          ),
-        ),
-      );
-    }
+    // Launch splash screen instantly with zero delay!
     return const ScenicSplashIntroScreen();
   }
 }
