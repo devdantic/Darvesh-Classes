@@ -29,7 +29,12 @@ class _EmptyDatabasePageState extends State<EmptyDatabasePage> {
       final profiles = await ProfileService.instance.getAllProfiles();
       if (mounted) {
         setState(() {
-          _students = profiles;
+          // Exclude Admin (Sanjay Sir) from deletion list to protect admin credentials & system state
+          _students = profiles.where((p) {
+            final email = (p['email'] as String? ?? '').toLowerCase();
+            final name = (p['name'] as String? ?? '').toLowerCase();
+            return email != 'sanjaygovindani757@gmail.com' && !name.contains('sanjay');
+          }).toList();
           _selectedStudentIds.clear();
           _selectAll = false;
         });
@@ -55,7 +60,7 @@ class _EmptyDatabasePageState extends State<EmptyDatabasePage> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Delete Student Profiles', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete $count selected student profile(s) from Supabase?', style: GoogleFonts.outfit()),
+        content: Text('Are you sure you want to delete $count selected student profile(s) from database?', style: GoogleFonts.outfit()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -143,6 +148,39 @@ class _EmptyDatabasePageState extends State<EmptyDatabasePage> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
+                  // Info Banner
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: AppTheme.primaryColor, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cascading Cleanup Active',
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.primaryColor),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Deleting a student profile automatically purges all their messages, complaints, and attendance logs. Admin (Sanjay Sir) is protected.',
+                                style: GoogleFonts.outfit(fontSize: 12, color: AppTheme.textDark),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   // Top Controls Card
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
