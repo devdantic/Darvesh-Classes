@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileService {
@@ -108,21 +109,19 @@ class ProfileService {
     final cleanEmail = email.trim().toLowerCase();
     if (cleanEmail == 'sanjaygovindani757@gmail.com') return true;
 
-    final response = await _client
-        .from('profiles')
-        .select('id')
-        .ilike('email', cleanEmail)
-        .maybeSingle();
+    try {
+      // Check student_requests table (which holds registered student emails)
+      final reqResponse = await _client
+          .from('student_requests')
+          .select('id')
+          .ilike('email', cleanEmail)
+          .maybeSingle();
 
-    if (response != null) return true;
-
-    final reqResponse = await _client
-        .from('student_requests')
-        .select('id')
-        .ilike('email', cleanEmail)
-        .maybeSingle();
-
-    return reqResponse != null;
+      return reqResponse != null;
+    } catch (e) {
+      debugPrint('Error checking profile existence by email: $e');
+      return false;
+    }
   }
 
   /// ---------------------------------------------------------
