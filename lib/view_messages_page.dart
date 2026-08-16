@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/message_service.dart';
@@ -15,15 +16,27 @@ class ViewMessagesPage extends StatefulWidget {
 class _ViewMessagesPageState extends State<ViewMessagesPage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _messages = [];
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchMessages();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _fetchMessages(isAutoPoll: true);
+    });
   }
 
-  Future<void> _fetchMessages() async {
-    setState(() => _isLoading = true);
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchMessages({bool isAutoPoll = false}) async {
+    if (!isAutoPoll) {
+      setState(() => _isLoading = true);
+    }
     try {
       final data = await MessageService.instance.getAllMessages();
       if (mounted) {
@@ -34,7 +47,7 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
     } catch (e) {
       debugPrint('Error fetching student messages: $e');
     } finally {
-      if (mounted) {
+      if (mounted && !isAutoPoll) {
         setState(() => _isLoading = false);
       }
     }

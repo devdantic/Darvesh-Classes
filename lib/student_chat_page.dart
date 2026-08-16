@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -40,34 +41,42 @@ class _StudentChatPageState extends State<StudentChatPage> {
   String? _attachedFileName;
 
   List<Map<String, dynamic>> _messages = [];
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchConversation();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _fetchConversation(isAutoPoll: true);
+    });
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _textController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchConversation() async {
+  Future<void> _fetchConversation({bool isAutoPoll = false}) async {
     try {
       final data = await MessageService.instance.getConversation(widget.studentId);
       if (mounted) {
+        final hasNewMessages = data.length != _messages.length;
         setState(() {
           _messages = data;
           _isLoading = false;
         });
-        _scrollToBottom();
+        if (hasNewMessages || !isAutoPoll) {
+          _scrollToBottom();
+        }
       }
     } catch (e) {
       debugPrint('Error fetching conversation: $e');
-      if (mounted) {
+      if (mounted && !isAutoPoll) {
         setState(() => _isLoading = false);
       }
     }
