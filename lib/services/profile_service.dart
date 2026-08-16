@@ -89,7 +89,7 @@ class ProfileService {
   }
 
   /// ---------------------------------------------------------
-  /// CHECK IF PROFILE EXISTS
+  /// CHECK IF PROFILE EXISTS BY USER ID
   /// ---------------------------------------------------------
   Future<bool> profileExists(String userId) async {
     final response = await _client
@@ -99,6 +99,30 @@ class ProfileService {
         .maybeSingle();
 
     return response != null;
+  }
+
+  /// ---------------------------------------------------------
+  /// CHECK IF PROFILE EXISTS BY EMAIL
+  /// ---------------------------------------------------------
+  Future<bool> profileExistsByEmail(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail == 'sanjaygovindani757@gmail.com') return true;
+
+    final response = await _client
+        .from('profiles')
+        .select('id')
+        .ilike('email', cleanEmail)
+        .maybeSingle();
+
+    if (response != null) return true;
+
+    final reqResponse = await _client
+        .from('student_requests')
+        .select('id')
+        .ilike('email', cleanEmail)
+        .maybeSingle();
+
+    return reqResponse != null;
   }
 
   /// ---------------------------------------------------------

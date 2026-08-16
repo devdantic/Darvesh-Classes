@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'services/profile_service.dart';
 import 'sign_up_page.dart';
 import 'admin_page.dart';
 import 'home_page.dart';
@@ -112,6 +113,17 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
 
                           setDialogState(() => isResetting = true);
                           try {
+                            // 1. Verify user really exists in Darvesh Classes database first
+                            final exists = await ProfileService.instance.profileExistsByEmail(email);
+                            if (!exists) {
+                              if (mounted) {
+                                _showSnackBar('No registered account found for $email. Please check spelling or sign up.', Colors.amber[900]!);
+                              }
+                              setDialogState(() => isResetting = false);
+                              return;
+                            }
+
+                            // 2. User exists -> Send password reset link
                             await AuthService.instance.resetPassword(email);
                             if (mounted) {
                               _showSnackBar('Password reset link sent! Check your inbox / spam.', const Color(0xFF10B981));
