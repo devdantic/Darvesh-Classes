@@ -141,18 +141,30 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        elevation: 4,
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-        onPressed: _showNewMessageDialog,
-        icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white),
-        label: Text(
-          'New Chat',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: Colors.white,
+      floatingActionButton: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(30),
+        color: AppTheme.primaryColor,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(30),
+          onTap: _showNewMessageDialog,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'New Chat',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -500,56 +512,60 @@ class _SelectStudentModalSheetState extends State<_SelectStudentModalSheet> {
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: Colors.grey.shade200),
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                          leading: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                            backgroundImage: avatar != null ? NetworkImage(avatar) : null,
-                            child: avatar == null
-                                ? Text(
-                                    name.isNotEmpty ? name[0].toUpperCase() : 'S',
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primaryColor,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  name,
-                                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15),
-                                ),
-                              ),
-                              if (std != null)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                            leading: CircleAvatar(
+                              radius: 20,
+                              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                              backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                              child: avatar == null
+                                  ? Text(
+                                      name.isNotEmpty ? name[0].toUpperCase() : 'S',
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryColor,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            title: Row(
+                              children: [
+                                Expanded(
                                   child: Text(
-                                    'Std $std',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primaryColor,
-                                    ),
+                                    name,
+                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15),
                                   ),
                                 ),
-                            ],
+                                if (std != null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Std $std',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            subtitle: phone.isNotEmpty
+                                ? Text('📞 $phone', style: GoogleFonts.outfit(fontSize: 12, color: AppTheme.textLight))
+                                : null,
+                            trailing: const Icon(Icons.chat_bubble_outline_rounded, color: AppTheme.primaryColor, size: 20),
+                            onTap: () {
+                              Navigator.pop(context);
+                              widget.onStudentSelected(id, name, std, avatar);
+                            },
                           ),
-                          subtitle: phone.isNotEmpty
-                              ? Text('📞 $phone', style: GoogleFonts.outfit(fontSize: 12, color: AppTheme.textLight))
-                              : null,
-                          trailing: const Icon(Icons.chat_bubble_outline_rounded, color: AppTheme.primaryColor, size: 20),
-                          onTap: () {
-                            Navigator.pop(context);
-                            widget.onStudentSelected(id, name, std, avatar);
-                          },
                         ),
                       );
                     },
