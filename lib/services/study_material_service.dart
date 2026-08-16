@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'notification_service.dart';
 
 class StudyMaterialService {
   StudyMaterialService._();
@@ -9,7 +11,7 @@ class StudyMaterialService {
   final SupabaseClient _client = Supabase.instance.client;
 
   /// ---------------------------------------------------------
-  /// ADD STUDY MATERIAL
+  /// ADD STUDY MATERIAL & NOTIFY CLASS
   /// ---------------------------------------------------------
   Future<void> addStudyMaterial({
     required int standard,
@@ -23,6 +25,18 @@ class StudyMaterialService {
       'title': title,
       'file_path': filePath,
     });
+
+    // Automatically send push notification to class standard topic
+    try {
+      await NotificationService.instance.sendTopicNotification(
+        topic: 'std_$standard',
+        title: '📚 New Study Material (Std $standard)',
+        body: '$subject: $title',
+        data: {'type': 'study_material'},
+      );
+    } catch (e) {
+      debugPrint('Error sending study material push notification: $e');
+    }
   }
 
   /// ---------------------------------------------------------
