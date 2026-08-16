@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/profile_service.dart';
+import 'services/update_service.dart';
 import 'show_attendance.dart';
 import 'student_calendar.dart';
 import 'study_material.dart';
@@ -47,6 +48,8 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _isLoadingName = false;
         });
+        // Check for app updates without Play Store
+        UpdateService.instance.checkForUpdates(context);
       }
     }
   }
