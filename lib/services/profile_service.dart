@@ -114,6 +114,26 @@ class ProfileService {
   }
 
   /// ---------------------------------------------------------
+  /// PROMOTE BATCH OF STUDENTS TO NEXT STANDARD
+  /// ---------------------------------------------------------
+  Future<void> promoteStandardBatch(int fromStandard, int toStandard) async {
+    await _client
+        .from('profiles')
+        .update({'standard': toStandard})
+        .eq('standard', fromStandard);
+  }
+
+  /// ---------------------------------------------------------
+  /// PROMOTE SINGLE STUDENT
+  /// ---------------------------------------------------------
+  Future<void> promoteStudent(String userId, int newStandard) async {
+    await _client
+        .from('profiles')
+        .update({'standard': newStandard})
+        .eq('id', userId);
+  }
+
+  /// ---------------------------------------------------------
   /// SEARCH STUDENTS
   /// ---------------------------------------------------------
   Future<List<Map<String, dynamic>>> searchProfiles(

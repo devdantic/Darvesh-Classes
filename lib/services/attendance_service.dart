@@ -147,6 +147,27 @@ class AttendanceService {
   }
 
   /// ---------------------------------------------------------
+  /// CLEAR ALL ATTENDANCE FOR A STUDENT (NEW ACADEMIC YEAR)
+  /// ---------------------------------------------------------
+  Future<void> clearStudentAttendance(String studentId) async {
+    await _client
+        .from('attendance')
+        .delete()
+        .eq('student_id', studentId);
+  }
+
+  /// ---------------------------------------------------------
+  /// CLEAR ALL ATTENDANCE FOR A LIST OF STUDENTS
+  /// ---------------------------------------------------------
+  Future<void> clearAttendanceForStudentList(List<String> studentIds) async {
+    if (studentIds.isEmpty) return;
+    await _client
+        .from('attendance')
+        .delete()
+        .filter('student_id', 'in', studentIds);
+  }
+
+  /// ---------------------------------------------------------
   /// CHECK IF ATTENDANCE EXISTS
   /// ---------------------------------------------------------
   Future<bool> attendanceExists({
