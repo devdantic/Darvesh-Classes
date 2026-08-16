@@ -23,18 +23,71 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
   Future<void> _fetchMessages() async {
     setState(() => _isLoading = true);
     try {
-      final data = await MessageService.instance.getAllAnnouncements();
+      final data = await MessageService.instance.getAllMessages();
       if (mounted) {
         setState(() {
           _messages = data;
         });
       }
     } catch (e) {
-      debugPrint('Error fetching announcements: $e');
+      debugPrint('Error fetching student messages: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _deleteMessage(String messageId, String studentName) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Message', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this message from $studentName?', style: GoogleFonts.outfit()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: GoogleFonts.outfit(color: AppTheme.textLight)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Delete', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await MessageService.instance.deleteMessage(messageId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Message deleted', style: GoogleFonts.outfit()),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        _fetchMessages();
+      }
+    } catch (e) {
+      debugPrint('Error deleting message: $e');
+    }
+  }
+
+  String _formatDateTime(String? rawIso) {
+    if (rawIso == null) return '';
+    try {
+      final dt = DateTime.parse(rawIso).toLocal();
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+      final amPm = dt.hour >= 12 ? 'PM' : 'AM';
+      final minute = dt.minute.toString().padLeft(2, '0');
+      return '${dt.day} ${monthNames[dt.month - 1]}, $hour:$minute $amPm';
+    } catch (e) {
+      return '';
     }
   }
 
@@ -44,7 +97,7 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: Text(
-          'Announcements & Messages',
+          'Messages from Students',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         actions: [
@@ -64,7 +117,7 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Loading announcements...',
+                    'Loading student messages...',
                     style: GoogleFonts.outfit(color: AppTheme.textLight),
                   ),
                 ],
@@ -80,7 +133,7 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
                         Icon(Icons.mark_email_read_rounded, size: 50, color: Colors.grey[400]),
                         const SizedBox(height: 12),
                         Text(
-                          'No announcements posted yet.',
+                          'No messages received from students yet.',
                           style: GoogleFonts.outfit(fontSize: 16, color: AppTheme.textLight),
                         ),
                       ],
@@ -92,9 +145,15 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final msg = _messages[index];
-                    final title = msg['title'] as String? ?? 'Notice';
-                    final content = (msg['message'] ?? msg['content']) as String? ?? '';
-                    final std = msg['standard'] as String? ?? 'All';
+                    final id = msg['id']?.toString() ?? '';
+                    final content = msg['message'] as String? ?? '';
+                    final createdAt = msg['created_at']?.toString();
+
+                    final profile = msg['profiles'] as Map<String, dynamic>?;
+                    final studentName = profile?['name'] as String? ?? 'Student';
+                    final standard = profile?['standard']?.toString() ?? 'N/A';
+                    final phone = profile?['phone'] as String? ?? '';
+                    final imageUrl = profile?['image_url'] as String?;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -112,39 +171,86 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
                         children: [
                           Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+                                child: imageUrl == null
+                                    ? Text(
+                                        studentName.isNotEmpty ? studentName[0].toUpperCase() : 'S',
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          studentName,
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.textDark,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            'Std $standard',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.primaryColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (phone.isNotEmpty)
+                                      Text(
+                                        '📞 $phone',
+                                        style: GoogleFonts.outfit(fontSize: 12, color: AppTheme.textLight),
+                                      ),
+                                  ],
                                 ),
-                                child: Text(
-                                  std,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                                onPressed: () => _deleteMessage(id, studentName),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            title,
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textDark,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
+                          const Divider(height: 20),
                           Text(
                             content,
                             style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              color: AppTheme.textLight,
+                              fontSize: 15,
+                              color: AppTheme.textDark,
                               height: 1.3,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: Text(
+                              _formatDateTime(createdAt),
+                              style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                color: AppTheme.textLight,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
