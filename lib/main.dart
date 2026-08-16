@@ -1,14 +1,15 @@
+import 'dart:async';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:video_player/video_player.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'authentication_page.dart';
 import 'firebase_message.dart';
-import 'theme.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,7 +52,6 @@ class AppInitializer extends StatefulWidget {
 
 class _AppInitializerState extends State<AppInitializer> {
   bool _isReady = false;
-  String _status = 'Preparing your learning space...';
 
   @override
   void initState() {
@@ -63,7 +63,7 @@ class _AppInitializerState extends State<AppInitializer> {
     try {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       await FirebaseAppCheck.instance.activate(
-        providerAndroid: const AndroidPlayIntegrityProvider()
+        providerAndroid: const AndroidPlayIntegrityProvider(),
       );
       await FirebaseApi().initNotification();
       final messaging = FirebaseMessaging.instance;
@@ -72,7 +72,8 @@ class _AppInitializerState extends State<AppInitializer> {
 
       if (mounted) setState(() => _isReady = true);
     } catch (e) {
-      if (mounted) setState(() => _status = 'Setup failed. Please restart.');
+      debugPrint('Initialization warning: $e');
+      if (mounted) setState(() => _isReady = true);
     }
   }
 
@@ -86,83 +87,111 @@ class _AppInitializerState extends State<AppInitializer> {
     if (!_isReady) {
       return Scaffold(
         body: Container(
-          decoration: const BoxDecoration(gradient: AppTheme.bgGradient),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.school_rounded, size: 48, color: AppTheme.primaryColor),
-                const SizedBox(height: 24),
-                const CircularProgressIndicator(color: AppTheme.primaryColor),
-                const SizedBox(height: 16),
-                Text(_status, style: Theme.of(context).textTheme.bodyMedium),
-              ],
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF1E40AF)],
             ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(color: Colors.white),
           ),
         ),
       );
     }
-    return const CinematicIntroScreen();
+    return const ScenicSplashIntroScreen();
   }
 }
 
 /// --------------------------------------------------------------------------
-/// CINEMATIC INTRO SCREEN
+/// SCENIC & SMOOTH ANIMATED SPLASH INTRO SCREEN
 /// --------------------------------------------------------------------------
-class CinematicIntroScreen extends StatefulWidget {
-  const CinematicIntroScreen({super.key});
+class ScenicSplashIntroScreen extends StatefulWidget {
+  const ScenicSplashIntroScreen({super.key});
 
   @override
-  State<CinematicIntroScreen> createState() => _CinematicIntroScreenState();
+  State<ScenicSplashIntroScreen> createState() => _ScenicSplashIntroScreenState();
 }
 
-class _CinematicIntroScreenState extends State<CinematicIntroScreen>
-    with SingleTickerProviderStateMixin {
-  VideoPlayerController? _controller;
-  bool _isInitialized = false;
-  bool _hasError = false;
+class _ScenicSplashIntroScreenState extends State<ScenicSplashIntroScreen>
+    with TickerProviderStateMixin {
+  late final AnimationController _mainController;
 
-  late final AnimationController _fadeController;
-  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _logoFade;
+  late final Animation<double> _titleFade;
+  late final Animation<Offset> _titleSlide;
+  late final Animation<double> _subtitleFade;
+  late final Animation<double> _glowPulse;
+
+  Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
+
+    _mainController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 2500),
     );
-    _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
-    _initVideo();
-  }
 
-  Future<void> _initVideo() async {
-    try {
-      _controller = VideoPlayerController.asset('media/DC_Intro.mp4');
-      await _controller!.initialize();
-      if (!mounted) return;
+    // 1. Logo Scale & Fade
+    _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOutBack),
+      ),
+    );
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+      ),
+    );
 
-      setState(() => _isInitialized = true);
-      _controller!.play();
-      _fadeController.forward();
-      _controller!.addListener(_onVideoProgress);
-    } catch (e) {
-      if (mounted) {
-        setState(() => _hasError = true);
-        _goToAuth();
-      }
-    }
-  }
+    // 2. Title Slide & Fade
+    _titleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.3, 0.65, curve: Curves.easeIn),
+      ),
+    );
+    _titleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.3, 0.65, curve: Curves.easeOutCubic),
+      ),
+    );
 
-  void _onVideoProgress() {
-    if (_controller == null) return;
-    if (_controller!.value.position >= _controller!.value.duration - const Duration(milliseconds: 500)) {
-      _controller!.removeListener(_onVideoProgress);
+    // 3. Subtitle & Glow Pulse
+    _subtitleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.55, 0.85, curve: Curves.easeIn),
+      ),
+    );
+
+    _glowPulse = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _mainController,
+        curve: const Interval(0.2, 1.0, curve: Curves.easeInOut),
+      ),
+    );
+
+    _mainController.forward();
+
+    // Automatically navigate after intro completes (3.2 seconds total)
+    _navigationTimer = Timer(const Duration(milliseconds: 3200), () {
       _goToAuth();
-    }
+    });
   }
 
   void _goToAuth() {
+    _navigationTimer?.cancel();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -170,68 +199,230 @@ class _CinematicIntroScreenState extends State<CinematicIntroScreen>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 1000),
+        transitionDuration: const Duration(milliseconds: 800),
       ),
     );
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
-    _fadeController.dispose();
+    _navigationTimer?.cancel();
+    _mainController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // We use the AppTheme.bgGradient here as well so the background never "flashes" black
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppTheme.bgGradient),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // FULLSCREEN VIDEO LOGIC
-            if (_isInitialized && _controller != null)
-              SizedBox.expand(
-                child: FittedBox(
-                  fit: BoxFit.cover, // This removes the black bars
-                  child: SizedBox(
-                    width: _controller!.value.size.width,
-                    height: _controller!.value.size.height,
-                    child: VideoPlayer(_controller!),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Scenic Background Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF0B132B), // Midnight Deep Navy
+                  Color(0xFF1C2541), // Rich Sapphire Blue
+                  Color(0xFF3A506B), // Ambient Dusk Blue
+                ],
+              ),
+            ),
+          ),
+
+          // Glowing Ambient Radial Backdrop behind Logo
+          Center(
+            child: AnimatedBuilder(
+              animation: _glowPulse,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _glowPulse.value,
+                  child: Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF3B82F6).withValues(alpha: 0.35),
+                          const Color(0xFF1E3A8A).withValues(alpha: 0.1),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.6, 1.0],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Main Center Content
+          SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 2),
+
+                // Animated Logo
+                AnimatedBuilder(
+                  animation: _mainController,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _logoFade,
+                      child: Transform.scale(
+                        scale: _logoScale.value,
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF3B82F6).withValues(alpha: 0.5),
+                                blurRadius: 30,
+                                spreadRadius: 4,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'media/DC_logo_2.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 32),
+
+                // Animated Title
+                FadeTransition(
+                  opacity: _titleFade,
+                  child: SlideTransition(
+                    position: _titleSlide,
+                    child: Column(
+                      children: [
+                        Text(
+                          'DARVESH CLASSES',
+                          style: GoogleFonts.outfit(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 3.0,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                offset: const Offset(0, 4),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 60,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF38BDF8),
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF38BDF8).withValues(alpha: 0.8),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
 
-            // Cinematic Gradients
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.3),
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.6),
+                // Animated Subtitle
+                FadeTransition(
+                  opacity: _subtitleFade,
+                  child: Text(
+                    'Empowering Excellence in Education',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.85),
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+
+                const Spacer(flex: 2),
+
+                // Bottom Loading Indicator & Branding
+                FadeTransition(
+                  opacity: _subtitleFade,
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF38BDF8)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'DARVESH CLASSES ACADEMY',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
+          ),
 
-            // Branding Text
-            Positioned(
-              bottom: 60,
-              left: 24,
-              right: 24,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
+          // Top-Right Skip Intro Button
+          Positioned(
+            top: 50,
+            right: 20,
+            child: FadeTransition(
+              opacity: _subtitleFade,
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                ),
+                onPressed: _goToAuth,
+                icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
+                label: Text(
+                  'Skip',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
