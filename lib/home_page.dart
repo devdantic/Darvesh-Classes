@@ -319,8 +319,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Announcements',
-                    subtitle: 'Class Broadcasts',
+                    title: 'Group Messages',
+                    subtitle: 'Read Broadcasts',
                     icon: Icons.campaign_rounded,
                     gradientColors: [const Color(0xFF10B981), const Color(0xFF059669)],
                     page: const MessageToStudentPage(),
@@ -343,8 +343,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Academy Dates',
-                    subtitle: 'Exams & Holidays',
+                    title: 'Important Dates',
+                    subtitle: 'Exams, Holidays and more',
                     icon: Icons.event_note_rounded,
                     gradientColors: [const Color(0xFF8B5CF6), const Color(0xFF7C3AED)],
                     page: const StudentCalendarPage(),
@@ -352,7 +352,7 @@ class _HomePageState extends State<HomePage> {
                   _buildDashboardCard(
                     context,
                     title: 'Chat with Sir',
-                    subtitle: '2-Way Direct Contact',
+                    subtitle: 'Raise your concerns here',
                     icon: Icons.mark_chat_read_rounded,
                     gradientColors: [const Color(0xFF06B6D4), const Color(0xFF0891B2)],
                     page: const MessageToSirPage(),
