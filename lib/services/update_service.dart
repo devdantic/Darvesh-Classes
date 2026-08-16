@@ -49,8 +49,6 @@ class UpdateService {
             isForceUpdate: isForceUpdate,
           );
         }
-      } else if (showNoUpdateToast && context.mounted) {
-        _showToast(context, 'You are using the latest version ($currentVersion)!');
       }
     } catch (e) {
       debugPrint('Error checking for updates: $e');
