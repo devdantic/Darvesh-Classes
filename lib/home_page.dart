@@ -80,35 +80,59 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top App Bar Row
+                    // Top Navigation Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                gradient: LinearGradient(
+                                  colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                                ),
                                 shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                               child: const Icon(
                                 Icons.school_rounded,
-                                color: AppTheme.primaryColor,
-                                size: 24,
+                                color: Colors.white,
+                                size: 22,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Darvesh Classes',
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textDark,
-                              ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Darvesh Classes',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppTheme.textDark,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                Text(
+                                  'Student Portal',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    color: AppTheme.textLight,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
+
                         // Profile Avatar Button
                         InkWell(
                           onTap: () async {
@@ -122,24 +146,21 @@ class _HomePageState extends State<HomePage> {
                           },
                           borderRadius: BorderRadius.circular(30),
                           child: Container(
-                            padding: const EdgeInsets.all(2),
+                            padding: const EdgeInsets.all(2.5),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppTheme.primaryColor,
-                                width: 2,
+                              gradient: LinearGradient(
+                                colors: [AppTheme.primaryColor, const Color(0xFF38BDF8)],
                               ),
                               boxShadow: AppTheme.softShadow,
                             ),
                             child: CircleAvatar(
                               radius: 20,
                               backgroundColor: AppTheme.primaryLight,
-                              backgroundImage: _profileImageUrl != null &&
-                                      _profileImageUrl!.isNotEmpty
+                              backgroundImage: _profileImageUrl != null && _profileImageUrl!.isNotEmpty
                                   ? NetworkImage(_profileImageUrl!)
                                   : null,
-                              child: _profileImageUrl == null ||
-                                      _profileImageUrl!.isEmpty
+                              child: _profileImageUrl == null || _profileImageUrl!.isEmpty
                                   ? const Icon(
                                       Icons.person,
                                       size: 22,
@@ -153,7 +174,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Hero Welcome Card Banner
+                    // Scenic Hero Welcome Card Banner
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(22.0),
@@ -164,45 +185,64 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: Stack(
                         children: [
-                          // Background design circles
+                          // Background Ambient Decorative Circles
                           Positioned(
-                            right: -20,
-                            bottom: -30,
+                            right: -25,
+                            bottom: -35,
                             child: Container(
-                              width: 130,
-                              height: 130,
+                              width: 140,
+                              height: 140,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.white.withValues(alpha: 0.08),
                               ),
                             ),
                           ),
+                          Positioned(
+                            right: 40,
+                            top: -20,
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.05),
+                              ),
+                            ),
+                          ),
+
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
+                                  horizontal: 12,
+                                  vertical: 5,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                                 ),
-                                child: Text(
-                                  _getGreeting(),
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _getGreeting(),
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 14),
                               Text(
                                 _isLoadingName
                                     ? 'Welcome back!'
-                                    : 'Welcome, ${_studentName ?? "Student"}!',
+                                    : 'Welcome, ${_studentName ?? "Student"}! 👋',
                                 style: GoogleFonts.outfit(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -212,11 +252,11 @@ class _HomePageState extends State<HomePage> {
                               const SizedBox(height: 4),
                               Text(
                                 _studentStd != null
-                                    ? 'Class $_studentStd • Student Dashboard'
-                                    : 'Student Hub • Darvesh Classes Portal',
+                                    ? 'Class Standard $_studentStd • Academic Workspace'
+                                    : 'Student Hub • Darvesh Classes Academy',
                                 style: GoogleFonts.outfit(
                                   fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.85),
+                                  color: Colors.white.withValues(alpha: 0.88),
                                 ),
                               ),
                             ],
@@ -226,24 +266,31 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Section Title
+                    // Section Title Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Quick Access',
+                          'Learning Dashboard',
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.textDark,
                           ),
                         ),
-                        Text(
-                          '6 Modules',
-                          style: GoogleFonts.outfit(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textLight,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '6 Active Modules',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
                           ),
                         ),
                       ],
@@ -260,53 +307,53 @@ class _HomePageState extends State<HomePage> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.95,
+                childAspectRatio: 0.94,
                 children: [
                   _buildDashboardCard(
                     context,
                     title: 'Study Material',
-                    subtitle: 'PDFs & Course Notes',
+                    subtitle: 'Course Notes & PDFs',
                     icon: Icons.import_contacts_rounded,
                     gradientColors: [const Color(0xFF3F51B5), const Color(0xFF5C6BC0)],
                     page: const StudentStudyMaterialPage(),
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Messages',
-                    subtitle: 'Class Notices',
-                    icon: Icons.forum_rounded,
+                    title: 'Announcements',
+                    subtitle: 'Class Broadcasts',
+                    icon: Icons.campaign_rounded,
                     gradientColors: [const Color(0xFF10B981), const Color(0xFF059669)],
                     page: const MessageToStudentPage(),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Attendance',
-                    subtitle: 'Track Records',
+                    subtitle: 'Records & Analytics',
                     icon: Icons.analytics_rounded,
                     gradientColors: [const Color(0xFFF59E0B), const Color(0xFFD97706)],
                     page: const ShowAttendancePage(),
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'All Complains',
-                    subtitle: 'Feedback & Issues',
+                    title: 'Complaints',
+                    subtitle: 'Notices & Discipline',
                     icon: Icons.assignment_late_rounded,
                     gradientColors: [const Color(0xFFEF4444), const Color(0xFFDC2626)],
                     page: const ComplainPage(),
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Important Dates',
-                    subtitle: 'Calendar & Exams',
+                    title: 'Academy Dates',
+                    subtitle: 'Exams & Holidays',
                     icon: Icons.event_note_rounded,
                     gradientColors: [const Color(0xFF8B5CF6), const Color(0xFF7C3AED)],
                     page: const StudentCalendarPage(),
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Message to Sir',
-                    subtitle: 'Direct Contact',
-                    icon: Icons.contact_mail_rounded,
+                    title: 'Chat with Sir',
+                    subtitle: '2-Way Direct Contact',
+                    icon: Icons.mark_chat_read_rounded,
                     gradientColors: [const Color(0xFF06B6D4), const Color(0xFF0891B2)],
                     page: const MessageToSirPage(),
                   ),
@@ -341,7 +388,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: gradientColors[0].withValues(alpha: 0.3),
+            color: gradientColors[0].withValues(alpha: 0.35),
             spreadRadius: 1,
             blurRadius: 12,
             offset: const Offset(0, 6),
@@ -386,7 +433,7 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -417,7 +464,7 @@ class _HomePageState extends State<HomePage> {
                       style: GoogleFonts.outfit(
                         fontSize: 11,
                         fontWeight: FontWeight.w400,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
@@ -430,4 +477,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-

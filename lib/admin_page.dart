@@ -150,39 +150,62 @@ class AdminPage extends StatelessWidget {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Top Navigation & Hero Banner Section 
+            // Top Navigation & Hero Banner Section
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Row with App Title & Logout Button
+                    // Top Navigation Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                gradient: LinearGradient(
+                                  colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                                ),
                                 shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                               child: const Icon(
                                 Icons.admin_panel_settings_rounded,
-                                color: AppTheme.primaryColor,
-                                size: 26,
+                                color: Colors.white,
+                                size: 24,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Admin Command Console',
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textDark,
-                              ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Admin Console',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppTheme.textDark,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                Text(
+                                  'Darvesh Classes Control Center',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    color: AppTheme.textLight,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -218,8 +241,8 @@ class AdminPage extends StatelessWidget {
                       child: Stack(
                         children: [
                           Positioned(
-                            right: -20,
-                            bottom: -30,
+                            right: -25,
+                            bottom: -35,
                             child: Container(
                               width: 140,
                               height: 140,
@@ -243,6 +266,7 @@ class AdminPage extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -257,7 +281,7 @@ class AdminPage extends StatelessWidget {
                                           'Administrator Portal',
                                           style: GoogleFonts.outfit(
                                             fontSize: 12,
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.bold,
                                             color: Colors.white,
                                           ),
                                         ),
@@ -265,11 +289,32 @@ class AdminPage extends StatelessWidget {
                                     ),
                                   ),
                                   Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFF10B981),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: const Color(0xFF10B981)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Color(0xFF10B981),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Active',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF10B981),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -288,7 +333,7 @@ class AdminPage extends StatelessWidget {
                                 currentUserEmail ?? 'sanjaygovindani757@gmail.com',
                                 style: GoogleFonts.outfit(
                                   fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.85),
+                                  color: Colors.white.withValues(alpha: 0.88),
                                 ),
                               ),
                             ],
@@ -298,24 +343,31 @@ class AdminPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
-                    // Section Title
+                    // Section Title Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Console Modules',
+                          'Command Console Tools',
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.textDark,
                           ),
                         ),
-                        Text(
-                          '9 Tools Available',
-                          style: GoogleFonts.outfit(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textLight,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '9 Tools Active',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
                           ),
                         ),
                       ],
@@ -332,13 +384,13 @@ class AdminPage extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.95,
+                childAspectRatio: 0.94,
                 children: [
                   _buildAdminCard(
                     context,
                     page: const UpdateStudyMaterialPage(),
                     title: 'Study Material',
-                    subtitle: 'Upload & Update PDFs',
+                    subtitle: 'Upload & Edit PDFs',
                     icon: Icons.library_books_rounded,
                     gradientColors: [const Color(0xFF1E88E5), const Color(0xFF1565C0)],
                   ),
@@ -346,41 +398,41 @@ class AdminPage extends StatelessWidget {
                     context,
                     page: const MarkAttendancePage(),
                     title: 'Mark Attendance',
-                    subtitle: 'Daily Student Registry',
+                    subtitle: 'Daily Registry Log',
                     icon: Icons.calendar_today_rounded,
-                    gradientColors: [const Color(0xFFFB8C00), const Color(0xFFEF6C00)],
-                  ),
-                  _buildAdminCard(
-                    context,
-                    page: const StudentComplainsPage(),
-                    title: 'Complains',
-                    subtitle: 'Student Feedback',
-                    icon: Icons.assignment_late_rounded,
-                    gradientColors: [const Color(0xFFE53935), const Color(0xFFC62828)],
-                  ),
-                  _buildAdminCard(
-                    context,
-                    page: const AddEventPage(),
-                    title: 'Calendar Events',
-                    subtitle: 'Exams & Holidays',
-                    icon: Icons.event_rounded,
-                    gradientColors: [const Color(0xFF8E24AA), const Color(0xFF6A1B9A)],
-                  ),
-                  _buildAdminCard(
-                    context,
-                    page: const SendMessagePage(),
-                    title: 'Group Message',
-                    subtitle: 'Broadcast Notices',
-                    icon: Icons.forum_rounded,
                     gradientColors: [const Color(0xFF43A047), const Color(0xFF2E7D32)],
                   ),
                   _buildAdminCard(
                     context,
                     page: const CheckAttendancePage(),
-                    title: 'Check Report',
-                    subtitle: 'Attendance Summaries',
+                    title: 'Attendance Report',
+                    subtitle: 'Academy & Student Stats',
+                    icon: Icons.analytics_rounded,
+                    gradientColors: [const Color(0xFFFB8C00), const Color(0xFFEF6C00)],
+                  ),
+                  _buildAdminCard(
+                    context,
+                    page: const ViewMessagesPage(),
+                    title: 'Student Messaging',
+                    subtitle: '2-Way WhatsApp Chat',
+                    icon: Icons.forum_rounded,
+                    gradientColors: [const Color(0xFF00ACC1), const Color(0xFF00838F)],
+                  ),
+                  _buildAdminCard(
+                    context,
+                    page: const SendMessagePage(),
+                    title: 'Announcements',
+                    subtitle: 'Broadcast Notices',
+                    icon: Icons.campaign_rounded,
+                    gradientColors: [const Color(0xFF8E24AA), const Color(0xFF6A1B9A)],
+                  ),
+                  _buildAdminCard(
+                    context,
+                    page: const StudentComplainsPage(),
+                    title: 'Discipline Hub',
+                    subtitle: 'Complaints & Analytics',
                     icon: Icons.assignment_turned_in_rounded,
-                    gradientColors: [const Color(0xFF6D4C41), const Color(0xFF4E342E)],
+                    gradientColors: [const Color(0xFFE53935), const Color(0xFFC62828)],
                   ),
                   _buildAdminCard(
                     context,
@@ -388,24 +440,23 @@ class AdminPage extends StatelessWidget {
                     title: 'Student Requests',
                     subtitle: 'Approve Registrations',
                     icon: Icons.person_add_alt_1_rounded,
-                    gradientColors: [const Color(0xFF00ACC1), const Color(0xFF00838F)],
-                  ),
-                  _buildAdminCard(
-                    context,
-                    page: const ViewMessagesPage(),
-                    title: 'Inbound Messages',
-                    subtitle: 'Messages from Students',
-                    icon: Icons.mark_chat_unread_rounded,
-                    gradientColors: [const Color(0xFF3F51B5), const Color(0xFF303F9F)],
+                    gradientColors: [const Color(0xFF3949AB), const Color(0xFF283593)],
                   ),
                   _buildAdminCard(
                     context,
                     page: const EmptyDatabasePage(),
-                    title: 'Reset Database',
-                    subtitle: 'Clear All Records',
-                    icon: Icons.delete_forever_rounded,
+                    title: 'Grade Promotion',
+                    subtitle: 'Annual Ops & Reset',
+                    icon: Icons.school_rounded,
+                    gradientColors: [const Color(0xFFD81B60), const Color(0xFFAD1457)],
+                  ),
+                  _buildAdminCard(
+                    context,
+                    page: const AddEventPage(),
+                    title: 'Academy Dates',
+                    subtitle: 'Exams & Holidays',
+                    icon: Icons.event_rounded,
                     gradientColors: [const Color(0xFF546E7A), const Color(0xFF37474F)],
-                    isDestructive: true,
                   ),
                 ],
               ),
@@ -427,7 +478,6 @@ class AdminPage extends StatelessWidget {
     required String subtitle,
     required IconData icon,
     required List<Color> gradientColors,
-    bool isDestructive = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -439,7 +489,7 @@ class AdminPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: gradientColors[0].withValues(alpha: 0.3),
+            color: gradientColors[0].withValues(alpha: 0.35),
             spreadRadius: 1,
             blurRadius: 12,
             offset: const Offset(0, 6),
@@ -462,6 +512,7 @@ class AdminPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Top Icon & Badge
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -480,17 +531,19 @@ class AdminPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        isDestructive ? Icons.warning_amber_rounded : Icons.arrow_forward_rounded,
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
                         size: 16,
                         color: Colors.white,
                       ),
                     ),
                   ],
                 ),
+
+                // Labels
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -509,7 +562,7 @@ class AdminPage extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 11,
                         fontWeight: FontWeight.w400,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
@@ -522,4 +575,3 @@ class AdminPage extends StatelessWidget {
     );
   }
 }
-
