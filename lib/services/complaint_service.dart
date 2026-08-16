@@ -73,6 +73,19 @@ class ComplaintService {
   }
 
   /// ---------------------------------------------------------
+  /// UPDATE COMPLAINT
+  /// ---------------------------------------------------------
+  Future<void> updateComplaint({
+    required String complaintId,
+    required String complaint,
+  }) async {
+    await _client
+        .from('complaints')
+        .update({'complaint': complaint})
+        .eq('id', complaintId);
+  }
+
+  /// ---------------------------------------------------------
   /// DELETE COMPLAINT
   /// ---------------------------------------------------------
   Future<void> deleteComplaint(String complaintId) async {
