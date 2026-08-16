@@ -15,27 +15,15 @@ class ShowAttendancePage extends StatefulWidget {
 class _ShowAttendancePageState extends State<ShowAttendancePage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _attendanceRecords = [];
-  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchAttendance();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _fetchAttendance(isAutoPoll: true);
-    });
   }
 
-  @override
-  void dispose() {
-    _pollingTimer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _fetchAttendance({bool isAutoPoll = false}) async {
-    if (!isAutoPoll) {
-      setState(() => _isLoading = true);
-    }
+  Future<void> _fetchAttendance() async {
+    setState(() => _isLoading = true);
     try {
       final data = await AttendanceService.instance.getMyAttendance();
       if (mounted) {
@@ -46,7 +34,7 @@ class _ShowAttendancePageState extends State<ShowAttendancePage> {
     } catch (e) {
       debugPrint('Error fetching student attendance: $e');
     } finally {
-      if (mounted && !isAutoPoll) {
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }

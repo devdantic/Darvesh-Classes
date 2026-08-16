@@ -16,25 +16,41 @@ class ViewMessagesPage extends StatefulWidget {
 class _ViewMessagesPageState extends State<ViewMessagesPage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _messages = [];
-  Timer? _pollingTimer;
+  StreamSubscription<List<Map<String, dynamic>>>? _messagesSubscription;
 
   @override
   void initState() {
     super.initState();
+    _subscribeToMessages();
+  }
+
+  void _subscribeToMessages() {
     _fetchMessages();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _fetchMessages(isAutoPoll: true);
-    });
+    try {
+      _messagesSubscription = MessageService.instance
+          .streamAllMessages()
+          .listen(
+        (data) {
+          // Re-fetch with profile join when new message arrives in stream
+          _fetchMessages(isSilent: true);
+        },
+        onError: (e) {
+          debugPrint('Error streaming admin messages: $e');
+        },
+      );
+    } catch (e) {
+      debugPrint('Error initializing admin message stream: $e');
+    }
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    _messagesSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _fetchMessages({bool isAutoPoll = false}) async {
-    if (!isAutoPoll) {
+  Future<void> _fetchMessages({bool isSilent = false}) async {
+    if (!isSilent) {
       setState(() => _isLoading = true);
     }
     try {
@@ -47,7 +63,7 @@ class _ViewMessagesPageState extends State<ViewMessagesPage> {
     } catch (e) {
       debugPrint('Error fetching student messages: $e');
     } finally {
-      if (mounted && !isAutoPoll) {
+      if (mounted && !isSilent) {
         setState(() => _isLoading = false);
       }
     }

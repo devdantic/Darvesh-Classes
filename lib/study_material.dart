@@ -20,7 +20,6 @@ class _StudentStudyMaterialPageState extends State<StudentStudyMaterialPage> {
   String _selectedSubjectFilter = 'All';
   bool _isLoading = true;
   List<Map<String, dynamic>> _materials = [];
-  Timer? _pollingTimer;
 
   final List<int> _availableStandards = [5, 6, 7, 8, 9, 10];
   final List<String> _availableSubjects = [
@@ -38,14 +37,10 @@ class _StudentStudyMaterialPageState extends State<StudentStudyMaterialPage> {
   void initState() {
     super.initState();
     _loadInitialData();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _fetchMaterials(isAutoPoll: true);
-    });
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
     super.dispose();
   }
 
@@ -66,10 +61,8 @@ class _StudentStudyMaterialPageState extends State<StudentStudyMaterialPage> {
     await _fetchMaterials();
   }
 
-  Future<void> _fetchMaterials({bool isAutoPoll = false}) async {
-    if (!isAutoPoll) {
-      setState(() => _isLoading = true);
-    }
+  Future<void> _fetchMaterials() async {
+    setState(() => _isLoading = true);
     try {
       final data = await StudyMaterialService.instance
           .getStudyMaterialsByStandard(_selectedStandard);
@@ -79,9 +72,9 @@ class _StudentStudyMaterialPageState extends State<StudentStudyMaterialPage> {
         });
       }
     } catch (e) {
-      debugPrint('Error fetching study materials for student: $e');
+      debugPrint('Error fetching study materials: $e');
     } finally {
-      if (mounted && !isAutoPoll) {
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }

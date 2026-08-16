@@ -73,6 +73,20 @@ class ComplaintService {
   }
 
   /// ---------------------------------------------------------
+  /// STREAM CURRENT USER COMPLAINTS (REALTIME)
+  /// ---------------------------------------------------------
+  Stream<List<Map<String, dynamic>>> streamMyComplaints() {
+    final user = _client.auth.currentUser;
+    if (user == null) return const Stream.empty();
+
+    return _client
+        .from('complaints')
+        .stream(primaryKey: ['id'])
+        .eq('student_id', user.id)
+        .order('created_at', ascending: false);
+  }
+
+  /// ---------------------------------------------------------
   /// UPDATE COMPLAINT
   /// ---------------------------------------------------------
   Future<void> updateComplaint({
