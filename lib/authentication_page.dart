@@ -126,7 +126,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                             // 2. User exists -> Send password reset link
                             await AuthService.instance.resetPassword(email);
                             if (mounted) {
-                              _showSnackBar('Password reset link sent! Check your inbox / spam.', const Color(0xFF10B981));
+                              _showSnackBar('If the ', const Color(0xFF10B981));
                             }
                             if (dialogContext.mounted) Navigator.pop(dialogContext);
                           } on AuthException catch (e) {

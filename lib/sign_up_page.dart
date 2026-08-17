@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 import 'services/student_request_service.dart';
+import 'services/profile_service.dart';
 import 'theme.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -25,9 +26,45 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
+  // Focus Nodes to detect when user leaves a field
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _phoneFocus = FocusNode();
+  final FocusNode _addressFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+
+  // Track which fields have been "touched" (lost focus)
+  final Map<String, bool> _touchedFields = {
+    'name': false,
+    'phone': false,
+    'address': false,
+    'email': false,
+    'password': false,
+    'standard': false,
+  };
+
   String? _selectedStandard;
   XFile? _selectedImage;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to focus nodes
+    _nameFocus.addListener(() => _onFocusChange('name', _nameFocus));
+    _phoneFocus.addListener(() => _onFocusChange('phone', _phoneFocus));
+    _addressFocus.addListener(() => _onFocusChange('address', _addressFocus));
+    _emailFocus.addListener(() => _onFocusChange('email', _emailFocus));
+    _passwordFocus.addListener(() => _onFocusChange('password', _passwordFocus));
+  }
+
+  void _onFocusChange(String field, FocusNode node) {
+    if (!node.hasFocus) {
+      setState(() {
+        _touchedFields[field] = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -36,6 +73,11 @@ class _SignUpPageState extends State<SignUpPage> {
     _passwordController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _nameFocus.dispose();
+    _phoneFocus.dispose();
+    _addressFocus.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -60,14 +102,31 @@ class _SignUpPageState extends State<SignUpPage> {
 
   /// 3. Main Sign Up Logic
   Future<void> _handleSignUp() async {
+    // Mark all fields as touched to show errors if they exist
+    setState(() {
+      _touchedFields.updateAll((key, value) => true);
+    });
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      final email = _emailController.text.trim();
+
+      // 0. Check if email already exists in student_requests
+      final exists = await ProfileService.instance.profileExistsByEmail(email);
+      if (exists) {
+        if (mounted) {
+          _showSnackBar('An account with this email already exists or is pending approval.', Colors.amber[900]!);
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
+
       // A. Create the Auth User
       final authResponse = await AuthService.instance.signUp(
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text.trim(),
       );
 
@@ -177,47 +236,95 @@ class _SignUpPageState extends State<SignUpPage> {
                     children: [
                       TextFormField(
                         controller: _nameController,
+                        focusNode: _nameFocus,
+                        textCapitalization: TextCapitalization.words,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person)),
-                        validator: (v) => v!.isEmpty ? 'Enter your name' : null,
+                        validator: (v) {
+                          if (!_touchedFields['name']!) return null;
+                          if (v == null || v.trim().isEmpty) return 'Enter your full name';
+                          if (v.trim().split(' ').length < 2) return 'Please enter your full name (First & Last)';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         value: _selectedStandard,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(labelText: 'Standard', prefixIcon: Icon(Icons.school)),
                         items: ['Std 5', 'Std 6', 'Std 7', 'Std 8', 'Std 9', 'Std 10']
                             .map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                        onChanged: (val) => setState(() => _selectedStandard = val),
-                        validator: (v) => v == null ? 'Select your standard' : null,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedStandard = val;
+                            _touchedFields['standard'] = true;
+                          });
+                        },
+                        validator: (v) {
+                          if (!_touchedFields['standard']!) return null;
+                          return v == null ? 'Select your standard' : null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _phoneController,
+                        focusNode: _phoneFocus,
                         keyboardType: TextInputType.phone,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(labelText: 'Phone Number', prefixIcon: Icon(Icons.phone)),
-                        validator: (v) => v!.isEmpty ? 'Enter phone number' : null,
+                        validator: (v) {
+                          if (!_touchedFields['phone']!) return null;
+                          if (v == null || v.isEmpty) return 'Enter phone number';
+                          if (!RegExp(r'^[0-9]{10}$').hasMatch(v)) return 'Enter a valid 10-digit phone number';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _addressController,
+                        focusNode: _addressFocus,
                         maxLines: 2,
+                        textCapitalization: TextCapitalization.sentences,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(
                             labelText: 'Full Address',
                             prefixIcon: Icon(Icons.home)
                         ),
-                        validator: (v) => v!.isEmpty ? 'Enter your address' : null,
+                        validator: (v) {
+                          if (!_touchedFields['address']!) return null;
+                          if (v == null || v.trim().isEmpty) return 'Enter your address';
+                          if (v.trim().length < 10) return 'Please enter a more detailed address';
+                          return null;
+                        },
                       ),
                       TextFormField(
                         controller: _emailController,
+                        focusNode: _emailFocus,
                         keyboardType: TextInputType.emailAddress,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(labelText: 'Email Address', prefixIcon: Icon(Icons.email)),
-                        validator: (v) => v!.isEmpty ? 'Enter email' : null,
+                        validator: (v) {
+                          if (!_touchedFields['email']!) return null;
+                          if (v == null || v.isEmpty) return 'Enter email';
+                          // Optimized regex for email
+                          if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return 'Enter a valid email address';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _passwordController,
+                        focusNode: _passwordFocus,
                         obscureText: true,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock)),
-                        validator: (v) => v!.length < 6 ? 'Minimum 6 characters' : null,
+                        validator: (v) {
+                          if (!_touchedFields['password']!) return null;
+                          if (v == null || v.isEmpty) return 'Enter password';
+                          if (v.length < 6) return 'Password must be at least 6 characters';
+                          if (!RegExp(r'[0-9]').hasMatch(v)) return 'Add at least one number';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
