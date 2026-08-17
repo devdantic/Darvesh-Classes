@@ -18,3 +18,6 @@
 -keepclassmembers enum * { *; }
 -dontwarn okio.**
 -dontwarn okhttp3.**
+
+# Play Core rules to fix R8 build errors
+-dontwarn com.google.android.play.core.**

@@ -222,7 +222,7 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
                     Text('Standard Class', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<int>(
-                      value: editStd,
+                      initialValue: editStd,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -237,7 +237,7 @@ class _UpdateStudyMaterialPageState extends State<UpdateStudyMaterialPage> {
                     Text('Subject', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
-                      value: editSubject,
+                      initialValue: editSubject,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

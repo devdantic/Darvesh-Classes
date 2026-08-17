@@ -854,7 +854,7 @@ class _CheckAttendancePageState extends State<CheckAttendancePage> {
                   ),
                   trailing: Switch(
                     value: isPresent,
-                    activeColor: const Color(0xFF10B981),
+                    activeThumbColor: const Color(0xFF10B981),
                     onChanged: (newVal) => _toggleAttendance(studentId, dateStr, isPresent),
                   ),
                   onTap: () => _toggleAttendance(studentId, dateStr, isPresent),

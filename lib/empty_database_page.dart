@@ -229,7 +229,7 @@ class _EmptyDatabasePageState extends State<EmptyDatabasePage> {
                   Text('Select New Grade Standard', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<int>(
-                    value: selectedNewStd,
+                    initialValue: selectedNewStd,
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -546,7 +546,7 @@ class _EmptyDatabasePageState extends State<EmptyDatabasePage> {
                           Text('From Class', style: GoogleFonts.outfit(fontSize: 12, color: AppTheme.textLight)),
                           const SizedBox(height: 4),
                           DropdownButtonFormField<int>(
-                            value: _batchFromStandard,
+                            initialValue: _batchFromStandard,
                             decoration: InputDecoration(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -570,7 +570,7 @@ class _EmptyDatabasePageState extends State<EmptyDatabasePage> {
                           Text('To Target Class', style: GoogleFonts.outfit(fontSize: 12, color: AppTheme.textLight)),
                           const SizedBox(height: 4),
                           DropdownButtonFormField<int>(
-                            value: _batchToStandard,
+                            initialValue: _batchToStandard,
                             decoration: InputDecoration(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

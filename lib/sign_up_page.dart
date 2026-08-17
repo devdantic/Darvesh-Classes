@@ -249,7 +249,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: _selectedStandard,
+                        initialValue: _selectedStandard,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(labelText: 'Standard', prefixIcon: Icon(Icons.school)),
                         items: ['Std 5', 'Std 6', 'Std 7', 'Std 8', 'Std 9', 'Std 10']
