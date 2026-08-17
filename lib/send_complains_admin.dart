@@ -203,7 +203,7 @@ class _StudentComplainsPageState extends State<StudentComplainsPage> {
                     Text('Category Topic', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
-                      value: selectedTopic,
+                      initialValue: selectedTopic,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

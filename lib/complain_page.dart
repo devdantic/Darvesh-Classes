@@ -110,7 +110,7 @@ class _ComplainPageState extends State<ComplainPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Loading notices...',
+                    'Loading complains...',
                     style: GoogleFonts.outfit(color: AppTheme.textLight),
                   ),
                 ],
