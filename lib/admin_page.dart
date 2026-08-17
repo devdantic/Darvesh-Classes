@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/auth_service.dart';
+import 'services/update_service.dart';
 import 'check_attendance.dart';
 import 'event.dart';
 import 'group_message_admin.dart';
 import 'send_complains_admin.dart';
-import 'updateStudyMaterial.dart';
+import 'update_study_material.dart';
 import 'verify_student_requests.dart';
 import 'mark_attendance.dart';
 import 'authentication_page.dart';
@@ -13,8 +14,23 @@ import 'empty_database_page.dart';
 import 'view_messages_page.dart';
 import 'theme.dart';
 
-class AdminPage extends StatelessWidget {
+class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
+
+  @override
+  State<AdminPage> createState() => _AdminPageState();
+}
+
+class _AdminPageState extends State<AdminPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        UpdateService.instance.checkForUpdates(context);
+      }
+    });
+  }
 
   Future<void> _confirmAndSignOut(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(

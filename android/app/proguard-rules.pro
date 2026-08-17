@@ -6,18 +6,24 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.**  { *; }
 
-# Keep Firebase and Google Play Services
+# Flutter Deferred Components & Google Play Core
+-dontwarn com.google.android.play.core.**
+-dontwarn io.flutter.embedding.engine.deferredcomponents.**
+-dontwarn io.flutter.embedding.android.**
+
+# Firebase & Google Play Services
 -keep class com.google.firebase.** { *; }
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
 
-# Keep Supabase & HTTP / JSON Serialization
+# Supabase, HTTP & Kotlin
 -keepattributes Signature
 -keepattributes *Annotation*
 -keepattributes EnclosingMethod
 -keepclassmembers enum * { *; }
 -dontwarn okio.**
 -dontwarn okhttp3.**
-
-# Play Core rules to fix R8 build errors
--dontwarn com.google.android.play.core.**
+-dontwarn org.jetbrains.annotations.**
+-dontwarn kotlin.**
+-dontwarn kotlinx.**
