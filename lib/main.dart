@@ -1,111 +1,89 @@
+import 'dart:async';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:video_player/video_player.dart';
-
-import 'authentication_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_message.dart';
+import 'firebase_options.dart';
+import 'splash_screen.dart';
+import 'theme.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await FirebaseApi().initNotification();
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-  await SharedPreferences.getInstance();
-  await FirebaseMessaging.instance.setAutoInitEnabled(true);
-  await Permission.notification.request();
-  //sendNotification("Test", "TEST", 'dvMlPxG6TWy0b6e-j39cB0:APA91bF49otntJ0nbi_iDmuMA18HwuqyO2jiE6ckLKWzV0Bav_DjvLrgxeTciVLV2jYkGu23h2UyzCeUjVZxGIQxdacTan5EQUHIAkpNxhyOkU3Ma5Est7QS76hccQa9jifMc-oROBzB');
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+  };
+
+  await Supabase.initialize(
+    url: 'https://ulxemdfldbybyrxqsghh.supabase.co',
+    publishableKey: 'sb_publishable_7KgMpezYOS2r-IiR_QdWGg_CemimK0w',
   );
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    //print('User granted permission for notifications');
-  } else {
-    //print('User declined permission for notifications');
-  }
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    //print('Foreground message received: ${message.notification?.body}');
-  });
-
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    // print('Background/Terminated message received: ${message.notification?.body}');
-  });
 
   runApp(const IntroPage());
 }
 
 class IntroPage extends StatelessWidget {
-  const IntroPage({Key? key}) : super(key: key);
+  const IntroPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Intro',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: const DarveshClasses(),
+      title: 'Darvesh Classes',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      home: const AppInitializer(),
     );
   }
 }
 
-class DarveshClasses extends StatefulWidget {
-  const DarveshClasses({Key? key}) : super(key: key);
+/// --------------------------------------------------------------------------
+/// APP INITIALIZER (Zero-Delay Splash with Background Core Services Setup)
+/// --------------------------------------------------------------------------
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
 
   @override
-  _DarveshClassesState createState() => _DarveshClassesState();
+  State<AppInitializer> createState() => _AppInitializerState();
 }
 
-class _DarveshClassesState extends State<DarveshClasses> {
-  late VideoPlayerController _controller;
-
+class _AppInitializerState extends State<AppInitializer> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('media/DC_Intro.mp4')
-      ..initialize().then((_) {
-        _controller.play();
-        _controller.setLooping(false);
-        _controller.addListener(() {
-          if (!_controller.value.isPlaying && !_controller.value.isLooping) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const AuthenticationPage(),
-              ),
-            );
-          }
-        });
-      });
+    // Run background Firebase & notification setup asynchronously without delaying splash screen launch
+    _initializeInBackground();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Future<void> _initializeInBackground() async {
+    try {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      try {
+        await FirebaseAppCheck.instance.activate(
+          providerAndroid: const AndroidPlayIntegrityProvider(),
+        );
+      } catch (_) {}
+      FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+      final messaging = FirebaseMessaging.instance;
+      await messaging.setAutoInitEnabled(true);
+      await _setupNotifications(messaging);
+    } catch (e) {
+      debugPrint('Background initialization warning: $e');
+    }
+  }
+
+  Future<void> _setupNotifications(FirebaseMessaging messaging) async {
+    try {
+      await Permission.notification.request();
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final aspectRatio = screenSize.width / screenSize.height;
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: AspectRatio(
-          aspectRatio: aspectRatio,
-          child: VideoPlayer(_controller),
-        ),
-      ),
-    );
+    // Launch ultra-premium animated splash screen instantly
+    return const SplashScreen();
   }
 }
