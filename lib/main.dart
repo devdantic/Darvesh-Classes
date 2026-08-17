@@ -6,9 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'admin_page.dart';
 import 'authentication_page.dart';
 import 'firebase_message.dart';
 import 'firebase_options.dart';
+import 'home_page.dart';
+import 'services/auth_service.dart';
+import 'services/profile_service.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -171,12 +175,47 @@ class _ScenicSplashIntroScreenState extends State<ScenicSplashIntroScreen>
 
     // Automatically navigate after intro completes (3.2 seconds total)
     _navigationTimer = Timer(const Duration(milliseconds: 3200), () {
-      _goToAuth();
+      _navigateNext();
     });
   }
 
-  void _goToAuth() {
+  Future<void> _navigateNext() async {
     _navigationTimer?.cancel();
+    if (!mounted) return;
+
+    try {
+      final user = AuthService.instance.currentUser;
+      if (user != null) {
+        final profile = await ProfileService.instance.getCurrentProfile();
+        if (!mounted) return;
+
+        if (profile != null) {
+          final email = (profile['email'] as String? ?? user.email ?? '').trim().toLowerCase();
+          final role = (profile['role'] as String? ?? '').trim().toLowerCase();
+          final name = (profile['name'] as String? ?? '').trim().toLowerCase();
+
+          final bool isAdmin = email == 'sanjaygovindani757@gmail.com' ||
+              role == 'admin' ||
+              name.contains('sanjay');
+
+          final Widget targetPage = isAdmin ? const AdminPage() : const HomePage();
+
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (_, _, _) => targetPage,
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              transitionDuration: const Duration(milliseconds: 800),
+            ),
+          );
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error routing active user session: $e');
+    }
+
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -394,7 +433,7 @@ class _ScenicSplashIntroScreenState extends State<ScenicSplashIntroScreen>
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 ),
-                onPressed: _goToAuth,
+                onPressed: _navigateNext,
                 icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
                 label: Text(
                   'Skip',
