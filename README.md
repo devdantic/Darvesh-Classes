@@ -22,7 +22,7 @@
     <a href="#-interactive-workflows">Workflows</a> •
     <a href="#-tech-stack">Tech Stack</a> •
     <a href="#-getting-started">Getting Started</a> •
-    <a href="#-in-app-updates">OTA Updates</a>
+    <a href="#-building-for-production">Building APK</a>
   </p>
 
 </div>
@@ -59,7 +59,7 @@
 
 ```mermaid
 flowchart TB
-    subgraph Client["📱 Flutter Multi-Platform Client"]
+    subgraph Client["Flutter Multi-Platform Client"]
         direction TB
         UI["Modern UI / Theme Engine<br/>(Glassmorphic & Staggered Animations)"]
         State["Real-Time Stream Subscriptions<br/>(Supabase WebSockets)"]
@@ -67,7 +67,7 @@ flowchart TB
         FCMClient["FCM Background & Foreground Handlers"]
     end
 
-    subgraph SupabaseCloud["⚡ Supabase BaaS (PostgreSQL Engine)"]
+    subgraph SupabaseCloud["Supabase BaaS (PostgreSQL Engine)"]
         direction TB
         DB[("PostgreSQL Database<br/>(RLS Protected Tables)")]
         Realtime["Realtime Engine<br/>(Change Data Capture / WebSockets)"]
@@ -75,19 +75,19 @@ flowchart TB
         Auth["Supabase Auth Engine"]
     end
 
-    subgraph FirebaseCloud["🔥 Firebase Cloud Platform"]
+    subgraph FirebaseCloud["Firebase Cloud Platform"]
         FCM["Firebase Cloud Messaging (FCM)<br/>Push Notification Server"]
         AppCheck["Firebase App Check<br/>Play Integrity Verification"]
     end
 
-    subgraph Distribution["🚀 Self-Hosted Distribution"]
+    subgraph Distribution["Self-Hosted Distribution"]
         GH["GitHub Releases API<br/>Direct APK OTA In-App Updater"]
     end
 
-    Client <==>|"WebSocket Channels<br/>(Instant Chat & Complaints)"| Realtime
-    Client <==>|"REST / PostgREST (RLS)"| DB
-    Client <==>|"Uploads / Downloads"| Storage
-    Client <==>|"JWT Token Auth"| Auth
+    Client <-->|"WebSocket Channels (Instant Chat & Complaints)"| Realtime
+    Client <-->|"REST / PostgREST (RLS)"| DB
+    Client <-->|"Uploads / Downloads"| Storage
+    Client <-->|"JWT Token Auth"| Auth
     FirebaseCloud -.->|"Push Alerts & Badges"| FCMClient
     Distribution -.->|"OTA Release Check"| Client
 ```
@@ -100,18 +100,18 @@ flowchart TB
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Student as 👨‍🎓 Student
-    participant App as 📱 Flutter Client
-    participant Supabase as ⚡ Supabase Realtime
-    actor Admin as 👨‍🏫 Sanjay Sir (Admin)
+    actor Student as Student
+    participant App as Flutter App
+    participant Supabase as Supabase Realtime
+    actor Admin as Sanjay Sir (Admin)
 
-    Student->>App: Types & sends message
+    Student->>App: Types and sends message
     App->>Supabase: INSERT into messages table
-    Supabase-->>Supabase: Evaluate Row Level Security (RLS)
-    Supabase->>>Admin: Broadcast over WebSocket (0ms delay)
+    Note over Supabase: Evaluate Row Level Security (RLS)
+    Supabase->>Admin: Broadcast over WebSocket (0ms delay)
     Admin->>Supabase: Reads message & replies
-    Supabase->>>Student: Realtime WebSocket Push update
-    Student-->>App: UI renders bubble with smooth bounce
+    Supabase->>Student: Realtime WebSocket Push update
+    Student-->>App: UI renders message bubble smoothly
 ```
 
 ---
@@ -119,19 +119,19 @@ sequenceDiagram
 ### 2. Student Authentication & Session Lifecycle
 ```mermaid
 flowchart TD
-    Start([Launch App]) --> Splash[Scenic Animated Splash Screen]
-    Splash --> CheckSession{Active Supabase Session?}
+    Start(["Launch App"]) --> Splash["Scenic Animated Splash Screen"]
+    Splash --> CheckSession{"Active Supabase Session?"}
     
-    CheckSession -- Yes --> FetchProfile[Fetch Profile from DB]
-    FetchProfile --> CheckRole{Role Type}
-    CheckRole -- Admin --> AdminDash[🛡️ Sanjay Sir Admin Dashboard]
-    CheckRole -- Student --> StudentDash[👨‍🎓 Student Home Portal]
+    CheckSession -- "Yes" --> FetchProfile["Fetch Profile from DB"]
+    FetchProfile --> CheckRole{"Role Type"}
+    CheckRole -- "Admin" --> AdminDash["Sanjay Sir Admin Dashboard"]
+    CheckRole -- "Student" --> StudentDash["Student Home Portal"]
 
-    CheckSession -- No --> AuthPage[🔐 Authentication Screen]
-    AuthPage --> LoginChoice{Action}
-    LoginChoice -- Sign In --> Validate[Validate Credentials & Route]
-    LoginChoice -- Sign Up --> Register[Submit Registration Request]
-    Register --> Pending[⏳ Await Admin Approval Gate]
+    CheckSession -- "No" --> AuthPage["Authentication Screen"]
+    AuthPage --> LoginChoice{"Action"}
+    LoginChoice -- "Sign In" --> Validate["Validate Credentials & Route"]
+    LoginChoice -- "Sign Up" --> Register["Submit Registration Request"]
+    Register --> Pending["Await Admin Approval Gate"]
 ```
 
 ---
@@ -139,12 +139,12 @@ flowchart TD
 ### 3. In-App OTA Auto-Updater Flow
 ```mermaid
 flowchart LR
-    AppOpen([App Launch]) --> CheckVer[Query GitHub Releases API]
-    CheckVer --> Compare{Remote Tag > Local Version?}
-    Compare -- No --> UpToDate[✅ Up to Date]
-    Compare -- Yes --> ShowDialog[Show Modern Update Dialog]
-    ShowDialog --> Download[Download APK with Progress Indicator]
-    Download --> Install[Trigger Android Package Installer]
+    AppOpen(["App Launch"]) --> CheckVer["Query GitHub Releases API"]
+    CheckVer --> Compare{"Remote Tag > Local Version?"}
+    Compare -- "No" --> UpToDate["Up to Date"]
+    Compare -- "Yes" --> ShowDialog["Show Modern Update Dialog"]
+    ShowDialog --> Download["Download APK with Progress Indicator"]
+    Download --> Install["Trigger Android Package Installer"]
 ```
 
 ---
