@@ -210,8 +210,8 @@ lib/
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/devdantic/darvesh_classes.git
-   cd darvesh_classes
+   git clone https://github.com/devdantic/Darvesh-Classes.git
+   cd Darvesh-Classes
    ```
 
 2. **Install Dependencies:**
